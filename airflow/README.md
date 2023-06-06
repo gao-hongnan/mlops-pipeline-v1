@@ -149,7 +149,7 @@ newgrp docker
     ```bash
     $ local terminal
     gcloud compute scp --recurse \
-        --zone us-west2-a \
+        --zone asia-southeast1-a \
         --quiet \
         --tunnel-through-iap \
         --project gao-hongnan \
@@ -160,7 +160,7 @@ newgrp docker
     ```bash
     # from airflow/
     gcloud compute scp --recurse \
-        --zone us-west2-a \
+        --zone asia-southeast1-a \
         --quiet \
         --tunnel-through-iap \
         --project gao-hongnan \
@@ -168,7 +168,7 @@ newgrp docker
         mlops-pipeline-v1:~/mlops-pipeline-v1/airflow/.env
 
     gcloud compute scp --recurse \
-        --zone us-west2-a \
+        --zone asia-southeast1-a \
         --quiet \
         --tunnel-through-iap \
         --project gao-hongnan \
