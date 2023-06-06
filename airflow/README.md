@@ -86,12 +86,12 @@ gcloud compute firewall-rules create iap-tcp-tunneling \
     --description="Firewall rule to allow IAP TCP tunneling" \
     --project=gao-hongnan
 
-source /Users/gaohn/gaohn/common-utils/scripts/cloud/gcp/...
+source /Users/gaohn/gaohn/common-utils/scripts/cloud/gcp/gcloud_functions.sh
 
 vm_create --instance-name mlops-pipeline-v1 \
-    --machine-type e2-standard-2 \
-    --zone us-west2-a \
-    --boot-disk-size 20GB \
+    --machine-type e2-standard-4 \
+    --zone asia-southeast1-a \
+    --boot-disk-size 30GB \
     --image ubuntu-1804-bionic-v20230510 \
     --image-project ubuntu-os-cloud \
     --project gao-hongnan \
@@ -106,17 +106,27 @@ vm_create --instance-name mlops-pipeline-v1 \
 gcloud compute ssh \
     mlops-pipeline-v1 \
     --project=gao-hongnan \
-    --zone=us-west2-a \
+    --zone=asia-southeast1-a \
     --tunnel-through-iap \
     --quiet
 ```
 
 - Setup docker in VM
+- SUDO DOCKER
 
 ```bash
-git clone https://github.com/gao-hongnan/common-utils.git
-cd common-utils/scripts/containerization/docker
-bash docker_setup.sh
+sudo usermod -aG docker $USER && \
+logout
+```
+if dont logout then run `newgrp docker` to apply changes?
+
+```bash
+git clone https://github.com/gao-hongnan/common-utils.git && \
+cd common-utils/scripts/containerization/docker && \
+bash docker_setup.sh && \
+sudo usermod -aG docker $USER && \
+newgrp docker
+
 ```
 
 - Git clone repo
@@ -166,13 +176,6 @@ bash docker_setup.sh
         mlops-pipeline-v1:~/mlops-pipeline-v1/airflow/dags/.env
     ```
 
-- SUDO DOCKER
-
-```bash
-sudo usermod -aG docker $USER && \
-logout
-```
-if dont logout then run `newgrp docker` to apply changes?
 
 - run Airflow Pipeline above
 
@@ -194,4 +197,4 @@ docker compose up airflow-init
 docker compose --env-file .env up --build -d
 ```
 
-- This means Airflow UI is accessible at http://34.102.95.173:8080
+- This means Airflow UI is accessible at http://34.143.176.217:8080
