@@ -289,7 +289,9 @@ def upload_latest_data(
         )
         metadata = Metadata()
         df = update_metadata(df, metadata)
-        updated_at = df["updated_at"].iloc[0]
+        print(f"datetime now={datetime.now()}")
+        now = datetime.now()
+        updated_at = now  # df["updated_at"].iloc[0]
         blob = gcs.create_blob(f"{dataset}/{table_name}/{updated_at}.csv")
         blob.upload_from_string(df.to_csv(index=False), content_type="text/csv")
         logger.info(f"File {blob.name} uploaded to {bucket_name}.")

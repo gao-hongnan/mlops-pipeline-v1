@@ -70,3 +70,128 @@ docker compose down && \
 docker compose up airflow-init && \
 docker compose --env-file .env up --build -d
 ```
+
+# GCP STEPS
+
+gcloud compute firewall-rules create mlops-pipeline-v1-expose-ports \
+    --allow tcp:8501,tcp:8502,tcp:8001,tcp:8000,tcp:8080,tcp:5000 \
+    --target-tags=mlops-pipeline-v1-expose-ports \
+    --description="Firewall rule to expose ports for energy forecasting" \
+    --project=gao-hongnan
+
+gcloud compute firewall-rules create iap-tcp-tunneling \
+    --allow tcp:22 \
+    --target-service-accounts=gcp-storage-service-account@gao-hongnan.iam.gserviceaccount.com \
+    --source-ranges=35.235.240.0/20 \
+    --description="Firewall rule to allow IAP TCP tunneling" \
+    --project=gao-hongnan
+
+source /Users/gaohn/gaohn/common-utils/scripts/cloud/gcp/...
+
+vm_create --instance-name mlops-pipeline-v1 \
+    --machine-type e2-standard-2 \
+    --zone us-west2-a \
+    --boot-disk-size 20GB \
+    --image ubuntu-1804-bionic-v20230510 \
+    --image-project ubuntu-os-cloud \
+    --project gao-hongnan \
+    --service-account gcp-storage-service-account@gao-hongnan.iam.gserviceaccount.com \
+    --scopes https://www.googleapis.com/auth/cloud-platform \
+    --description "MLOps Pipeline V1 VM instance" \
+    --additional-flags --tags=http-server,https-server,iap-tcp-tunneling,mlops-pipeline-v1-expose-ports
+
+- SSH into VM
+
+```bash
+gcloud compute ssh \
+    mlops-pipeline-v1 \
+    --project=gao-hongnan \
+    --zone=us-west2-a \
+    --tunnel-through-iap \
+    --quiet
+```
+
+- Setup docker in VM
+
+```bash
+git clone https://github.com/gao-hongnan/common-utils.git
+cd common-utils/scripts/containerization/docker
+bash docker_setup.sh
+```
+
+- Git clone repo
+
+    ```bash
+    cd ~ && \
+    git clone https://github.com/gao-hongnan/mlops-pipeline-v1.git && \
+    cd mlops-pipeline-v1
+    # git checkout dev
+    ```
+
+- mkdir credentials if not exist
+
+    ```bash
+    mkdir -p airflow/dags/credentials
+    ```
+
+- send gcp json to vm
+
+    ```bash
+    $ local terminal
+    gcloud compute scp --recurse \
+        --zone us-west2-a \
+        --quiet \
+        --tunnel-through-iap \
+        --project gao-hongnan \
+        /Users/gaohn/gcp-storage-service-account.json \
+        mlops-pipeline-v1:~/mlops-pipeline-v1/airflow/dags/credentials/
+    ```
+
+    ```bash
+    # from airflow/
+    gcloud compute scp --recurse \
+        --zone us-west2-a \
+        --quiet \
+        --tunnel-through-iap \
+        --project gao-hongnan \
+        .env \
+        mlops-pipeline-v1:~/mlops-pipeline-v1/airflow/.env
+
+    gcloud compute scp --recurse \
+        --zone us-west2-a \
+        --quiet \
+        --tunnel-through-iap \
+        --project gao-hongnan \
+        ./dags/.env \
+        mlops-pipeline-v1:~/mlops-pipeline-v1/airflow/dags/.env
+    ```
+
+- SUDO DOCKER
+
+```bash
+sudo usermod -aG docker $USER && \
+logout
+```
+if dont logout then run `newgrp docker` to apply changes?
+
+- run Airflow Pipeline above
+
+```bash
+airflow $
+cd ~/mlops-pipeline-v1/airflow && \
+docker compose up airflow-init && \
+docker compose --env-file .env up --build -d
+```
+
+the steps above is explained below:
+
+```
+# Initialize the Airflow database
+docker compose up airflow-init
+
+# Start up all services
+# Note: You should set up the private PyPi server credentials before running this command.
+docker compose --env-file .env up --build -d
+```
+
+- This means Airflow UI is accessible at http://34.102.95.173:8080
