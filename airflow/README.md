@@ -7,6 +7,7 @@ For now no Dockerfile needed and if need is for mount output folder?
 
 - bash pypi.sh # to change name so that it is pushed and airflow can directly install it in the vm.
 - This step is impt, see deploy/.. in paul.
+- Think the `output` folder paul created is to solve the airflow transfer of data problem.
 
 ```bash
 curl -LfO 'https://airflow.apache.org/docs/apache-airflow/2.6.1/docker-compose.yaml'
@@ -31,8 +32,16 @@ echo "credentials" >> ./dags/.env # TO REPLACE
 sudo chmod 777 ./logs ./plugins
 echo env ROOT_DIR: ${ROOT_DIR:-/opt/airflow/dags} to docker-compose.yaml # TODO: check if AIRFLOW_PROJ_DIR is the same as ROOT_DIR if yes then remove ROOT_DIR
 
+# TODO: AIRFLOW__CORE__LOAD_EXAMPLES: 'false' # to remove example dags
 # Initialize the Airflow database
 docker compose up airflow-init
 
 # Start Airflow
 airflow/ $ docker compose --env-file .env up --build -d
+```
+
+```
+docker compose down && \
+docker compose up airflow-init && \
+docker compose --env-file .env up --build -d
+```

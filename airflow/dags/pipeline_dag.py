@@ -22,7 +22,7 @@ from airflow.utils.edgemodifier import Label
 def ml_pipeline():
     @task.virtualenv(
         task_id="run_feature_pipeline",
-        requirements=["pipeline-feature==0.0.2"],
+        requirements=["pipeline-feature==0.0.7"],
         python_version="3.9",
         multiple_outputs=True,
         system_site_packages=True,
@@ -57,3 +57,13 @@ def ml_pipeline():
         from mlops_pipeline_feature_v1 import pipeline
 
         pipeline.run()
+
+    @task
+    def dummy_task():
+        return EmptyOperator(task_id="run_training_pipeline")
+
+    # define DAG, empty operator is a dummy operator
+    run_feature_pipeline() >> dummy_task()
+
+
+ml_pipeline_dag = ml_pipeline()

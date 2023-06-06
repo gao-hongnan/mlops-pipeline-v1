@@ -3,4 +3,5 @@ requests
 prettytable
 rich
 pydantic
+python-dotenv
 gaohn-common-utils==0.0.23

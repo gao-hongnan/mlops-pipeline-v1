@@ -20,6 +20,8 @@
 # rm -rf dist
 # rm -rf gaohn_common_utils.egg-info
 
+# https://realpython.com/pypi-publish-python-package/
+
 cd pipeline-feature
 
 # Install build package

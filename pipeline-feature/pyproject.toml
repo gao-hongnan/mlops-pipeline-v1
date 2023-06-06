@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pipeline-feature"
-version = "0.0.2"
+version = "0.0.7"
 authors = [
   { name="Gao Hongnan", email="hongnangao@gmail.com" },
 ]
@@ -22,6 +22,7 @@ dependencies = [
     "prettytable",
     "rich",
     "pydantic",
+    "python-dotenv",
     "gaohn-common-utils==0.0.23"
 ]
 
@@ -29,7 +30,7 @@ dependencies = [
 dev = ["black", "pylint", "isort", "pytest", "mypy"]
 
 [tool.setuptools.packages.find]
-where = ["mlops_pipeline_feature_v1"]  # list of folders that contain the packages (["."] by default)
+where = ["."]  # list of folders that contain the packages (["."] by default)
 
 [project.urls]
 "Homepage" = "https://github.com/gao-hongnan/mlops-pipeline-v1"
