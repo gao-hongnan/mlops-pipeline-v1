@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pipeline-feature"
+version = "0.0.2"
+authors = [
+  { name="Gao Hongnan", email="hongnangao@gmail.com" },
+]
+description = "Feature Pipeline of MLOps Pipeline Version 1"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "numpy",
+    "requests",
+    "prettytable",
+    "rich",
+    "pydantic",
+    "gaohn-common-utils==0.0.23"
+]
+
+[project.optional-dependencies]
+dev = ["black", "pylint", "isort", "pytest", "mypy"]
+
+[tool.setuptools.packages.find]
+where = ["mlops_pipeline_feature_v1"]  # list of folders that contain the packages (["."] by default)
+
+[project.urls]
+"Homepage" = "https://github.com/gao-hongnan/mlops-pipeline-v1"
+"Bug Tracker" = "https://github.com/gao-hongnan/mlops-pipeline-v1/issues"
