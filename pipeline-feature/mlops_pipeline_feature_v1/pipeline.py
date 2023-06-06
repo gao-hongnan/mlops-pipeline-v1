@@ -4,7 +4,7 @@ import os
 import time
 from datetime import datetime
 from typing import List, Optional
-
+import pytz
 import pandas as pd
 import requests
 import rich
@@ -185,7 +185,7 @@ def generate_bq_schema_from_pandas(df: pd.DataFrame) -> List[bigquery.SchemaFiel
 
 
 class Metadata(BaseModel):
-    updated_at: datetime = datetime.now()
+    updated_at: datetime = datetime.now(pytz.timezone("Asia/Singapore"))
     source: str = "binance"
     source_type: str = "spot"
 
@@ -236,7 +236,8 @@ def upload_latest_data(
             start_time is not None
         ), "start_time must be provided to create dataset and table"
 
-        time_now = int(datetime.now().timestamp() * 1000)
+        sgt = pytz.timezone("Asia/Singapore")
+        time_now = int(datetime.now(sgt).timestamp() * 1000)
 
         df = get_binance_data(
             symbol=symbol,
@@ -278,7 +279,10 @@ def upload_latest_data(
         # now max_open_time is your new start_time
         start_time = max_open_time + interval_to_milliseconds(interval)
         print(f"start_time={start_time}")
-        time_now = int(datetime.now().timestamp() * 1000)
+
+        # Get the timezone for Singapore
+        sgt = pytz.timezone("Asia/Singapore")
+        time_now = int(datetime.now(sgt).timestamp() * 1000)
         print(f"time_now={time_now}")
 
         # only pull data from start_time onwards, which is the latest date in the table
@@ -293,9 +297,7 @@ def upload_latest_data(
 
         metadata = Metadata()
         df = update_metadata(df, metadata)
-        print(f"datetime now={datetime.now()}")
-        now = datetime.now()
-        updated_at = now  # df["updated_at"].iloc[0]
+        updated_at = df["updated_at"].iloc[0]
         blob = gcs.create_blob(f"{dataset}/{table_name}/{updated_at}.csv")
         blob.upload_from_string(df.to_csv(index=False), content_type="text/csv")
         logger.info(f"File {blob.name} uploaded to {bucket_name}.")
