@@ -29,8 +29,18 @@ logging.basicConfig(
 
 logger = logging.getLogger("rich")
 
-ROOT_DIR = str(Path.cwd().parent.parent)
-print(ROOT_DIR)
+# Set environment variables.
+if os.getenv("ROOT_DIR") is None:
+    ROOT_DIR = str(Path.cwd().parent.parent)
+    os.environ["ROOT_DIR"] = ROOT_DIR
+    print(f"ROOT_DIR: {ROOT_DIR}")
+else:
+    print(
+        "ROOT_DIR is already set. Likely in Docker since Environment is set in compose file."
+    )
+    ROOT_DIR = Path(os.getenv("ROOT_DIR"))
+    print(f"ROOT_DIR: {ROOT_DIR}")
+
 load_dotenv(dotenv_path=f"{ROOT_DIR}/.env")
 
 PROJECT_ID = os.getenv("PROJECT_ID")

@@ -4,4 +4,5 @@ prettytable
 rich
 pydantic
 python-dotenv
+db_dtypes
 gaohn-common-utils==0.0.23

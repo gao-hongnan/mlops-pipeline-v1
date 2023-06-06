@@ -5,6 +5,7 @@ from airflow.models import Variable
 from airflow.operators.empty import EmptyOperator
 from airflow.utils.trigger_rule import TriggerRule
 from airflow.utils.edgemodifier import Label
+from airflow.operators.dummy_operator import DummyOperator
 
 # Variable.set("ml_pipeline_feature_group_version", "5")
 # Variable.set("ml_pipeline_days_export", "30")
@@ -13,7 +14,8 @@ from airflow.utils.edgemodifier import Label
 
 @dag(
     dag_id="mlops_pipeline_v1",
-    schedule="@hourly",
+    # every 10 minutes = "*/10 * * * *", hourly = "@hourly", daily = "@daily"
+    schedule="*/10 * * * *",
     start_date=datetime(2023, 6, 1),  # year, month, day
     catchup=False,  # catchup=False, # set to False to disable backfill
     tags=["pipeline-feature", "pipeline-training", "pipeline-serving"],
@@ -22,9 +24,9 @@ from airflow.utils.edgemodifier import Label
 def ml_pipeline():
     @task.virtualenv(
         task_id="run_feature_pipeline",
-        requirements=["pipeline-feature==0.0.7"],
+        requirements=["pipeline-feature"],
         python_version="3.9",
-        multiple_outputs=True,
+        multiple_outputs=True,  # FIXME: multiple_outputs=True means must return a dict.
         system_site_packages=True,
     )
     def run_feature_pipeline() -> dict:
@@ -57,13 +59,12 @@ def ml_pipeline():
         from mlops_pipeline_feature_v1 import pipeline
 
         pipeline.run()
+        return {"feature_pipeline_run_id": "123"}
 
-    @task
-    def dummy_task():
-        return EmptyOperator(task_id="run_training_pipeline")
+    dummy_task = DummyOperator(task_id="dummy_task")
 
     # define DAG, empty operator is a dummy operator
-    run_feature_pipeline() >> dummy_task()
+    run_feature_pipeline() >> dummy_task
 
 
 ml_pipeline_dag = ml_pipeline()

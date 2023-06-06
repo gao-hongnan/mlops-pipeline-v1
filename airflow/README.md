@@ -8,6 +8,31 @@ For now no Dockerfile needed and if need is for mount output folder?
 - bash pypi.sh # to change name so that it is pushed and airflow can directly install it in the vm.
 - This step is impt, see deploy/.. in paul.
 - Think the `output` folder paul created is to solve the airflow transfer of data problem.
+- Find out how to redeploy pypi package and airflow pipeline in CICD.
+
+    ```bash
+    docker compose down && \
+    docker compose up airflow-init && \
+    docker compose --env-file .env up --build -d
+    ```
+
+    This automates build and push?
+
+In Airflow, Dags are triggered according to their schedule by default. If you have set a schedule in your Dag definition like "*/10 * * * *", then Airflow scheduler should automatically trigger your Dag every 10 minutes. You do not need to manually trigger it each time you update your Dag.
+
+However, if you want to trigger a Dag run immediately after updating your Dag, there are a few ways to do this:
+
+Airflow CLI: You can use Airflow's command line interface (CLI) to trigger a Dag. After updating your Dag and restarting your Airflow services, you can run a command like airflow dags trigger mlops_pipeline_v1 to trigger your Dag. This can be part of your automation script that runs after your CI/CD pipeline.
+
+Airflow REST API: Airflow also provides a REST API that you can use to trigger a Dag run. You can make a POST request to the /api/v1/dags/{dag_id}/dagRuns endpoint to trigger a Dag. This can also be part of your automation script.
+
+Airflow Python Client: If you have a Python script running in your environment that can communicate with your Airflow instance, you can use the Airflow Python client to trigger a Dag. The airflow-client-python package provides a simple way to interact with Airflow using Python.
+
+Remember, all these methods require your Airflow instance to be up and running. When you make changes to your Dag, you need to ensure that your Airflow services (specifically the webserver and scheduler) are restarted to pick up the changes.
+
+Please note that the approach you choose depends on your specific setup and requirements. If your Dags are scheduled to run frequently (e.g., every 10 minutes), you may not need to manually trigger them after each update. The scheduler will automatically trigger the Dag runs according to the schedule.
+
+## Commands
 
 ```bash
 curl -LfO 'https://airflow.apache.org/docs/apache-airflow/2.6.1/docker-compose.yaml'
