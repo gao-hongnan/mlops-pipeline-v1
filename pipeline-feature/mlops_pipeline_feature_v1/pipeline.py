@@ -277,7 +277,9 @@ def upload_latest_data(
 
         # now max_open_time is your new start_time
         start_time = max_open_time + interval_to_milliseconds(interval)
+        print(f"start_time={start_time}")
         time_now = int(datetime.now().timestamp() * 1000)
+        print(f"time_now={time_now}")
 
         # only pull data from start_time onwards, which is the latest date in the table
         df = get_binance_data(
@@ -287,6 +289,8 @@ def upload_latest_data(
             interval="1m",
             limit=1000,
         )
+        print("df.head()", df.head())
+
         metadata = Metadata()
         df = update_metadata(df, metadata)
         print(f"datetime now={datetime.now()}")
