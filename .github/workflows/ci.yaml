@@ -2,13 +2,16 @@ name: Continuous Integration
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   format-check:
-    runs-on: [ubuntu-latest, macos-latest]
+    runs-on:
+      - ubuntu-latest
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
