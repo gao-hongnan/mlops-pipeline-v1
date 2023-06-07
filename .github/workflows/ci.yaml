@@ -41,4 +41,4 @@ jobs:
           curl -o \
           ci_linter.sh \
           https://raw.githubusercontent.com/gao-hongnan/common-utils/main/scripts/devops/ci_linter.sh && \
-          bash ci_linter.sh pipeline-feature
+          bash ci_linter.sh pipeline-feature/mlops_pipeline_feature_v1/dummy.py
