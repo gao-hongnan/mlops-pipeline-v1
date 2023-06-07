@@ -30,13 +30,17 @@ skip = [
     ".mypy_cache",
     ".tox",
     "venv_*",
-    "pipeline-feature/venv_pipeline_feature",
     "venv",
     ".venv",
     "_build",
     "buck-out",
     "build",
     "dist",
+]
+skip_glob = [
+    "**/venv_*",
+    "venv",
+    ".venv",
 ]
 
 [tool.pylint]
