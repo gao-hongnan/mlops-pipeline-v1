@@ -10,9 +10,10 @@ on:
 
 jobs:
   format-check:
-    runs-on:
-      - ubuntu-latest
-      - windows-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -20,3 +21,9 @@ jobs:
       run: |
         curl https://raw.githubusercontent.com/gao-hongnan/common-utils/main/scripts/devops/ci_formatter.sh \
         | bash
+    - name: Run Pylint check
+      run: |
+        curl -o \
+        ci_linter.sh \
+        https://raw.githubusercontent.com/gao-hongnan/common-utils/main/scripts/devops/ci_linter.sh && \
+        bash ci_linter.sh pipeline-feature

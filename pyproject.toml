@@ -18,4 +18,27 @@ exclude = '''
 )/
 '''
 
+[tool.pylint]
+    [tool.pylint.'MASTER']
+    ignore = [
+        ".eggs",
+        ".git",
+        ".hg",
+        ".mypy_cache",
+        ".tox",
+        "venv_*",
+        ".venv",
+        "_build",
+        "buck-out",
+        "build",
+        "dist",
+    ]
+    [tool.pylint.'MESSAGES CONTROL']
+    disable = [
+        "access-member-before-definition",
+        "attribute-defined-outside-init",
+        "duplicate-code",
+        "logging-fstring-interpolation",
+        "no-member",
+    ]
 
