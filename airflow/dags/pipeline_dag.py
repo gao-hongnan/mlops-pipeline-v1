@@ -2,10 +2,10 @@ from datetime import datetime
 
 from airflow.decorators import dag, task
 from airflow.models import Variable
-from airflow.operators.empty import EmptyOperator
-from airflow.utils.trigger_rule import TriggerRule
-from airflow.utils.edgemodifier import Label
 from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.empty import EmptyOperator
+from airflow.utils.edgemodifier import Label
+from airflow.utils.trigger_rule import TriggerRule
 
 # Variable.set("ml_pipeline_feature_group_version", "5")
 # Variable.set("ml_pipeline_days_export", "30")

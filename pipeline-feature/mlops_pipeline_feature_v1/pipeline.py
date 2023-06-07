@@ -3,9 +3,11 @@ import math
 import os
 import time
 from datetime import datetime
+from pathlib import Path
 from typing import List, Optional
-import pytz
+
 import pandas as pd
+import pytz
 import requests
 import rich
 from common_utils.cloud.gcp.storage.bigquery import BigQuery
@@ -15,7 +17,6 @@ from google.cloud import bigquery
 from pydantic import BaseModel  # pylint: disable=no-name-in-module
 from rich.logging import RichHandler
 from rich.pretty import pprint
-from pathlib import Path
 
 # TODO: add logger to my common_utils
 # TODO: add transforms to elt like dbt and great expectations

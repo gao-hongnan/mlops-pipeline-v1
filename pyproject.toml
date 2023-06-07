@@ -4,12 +4,14 @@ target-version = ['py37', 'py38', 'py39']
 include = '\.pyi?$'
 exclude = '''
 /(
-    \.eggs         # exclude a few common directories in the
-  | \.git          # root of the project
+    \.eggs                      # exclude a few common directories in the
+  | \.git                       # root of the project
   | \.hg
   | \.mypy_cache
   | \.tox
-  | venv_*         # exclude any directories starting with venv_
+  | (.*/)?venv_.*/.*
+  | (.*/)?\.venv/.*
+  | (.*/)?venv/.*
   | \.venv
   | _build
   | buck-out
@@ -17,6 +19,24 @@ exclude = '''
   | dist
 )/
 '''
+
+[tool.isort]
+profile = "black"
+line_length = 88
+skip = [
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".tox",
+    "venv_*",
+    "venv",
+    ".venv",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+]
 
 [tool.pylint]
     [tool.pylint.'MASTER']
@@ -27,6 +47,7 @@ exclude = '''
         ".mypy_cache",
         ".tox",
         "venv_*",
+        "venv",
         ".venv",
         "_build",
         "buck-out",

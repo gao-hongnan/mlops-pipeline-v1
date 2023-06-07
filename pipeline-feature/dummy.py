@@ -1,3 +1,7 @@
 """Dummy file for pylint."""
 
-NAME = "dummy"
+import os
+from typing import List, Tuple
+
+os.environ["DUMMY"] = "dummy"
+my_list: List[Tuple[int, str]] = [(1, "a"), (2, "b"), (3, "c")]
