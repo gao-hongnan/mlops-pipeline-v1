@@ -24,7 +24,7 @@ from airflow.operators.dummy_operator import DummyOperator
 def ml_pipeline():
     @task.virtualenv(
         task_id="run_feature_pipeline",
-        requirements=["pipeline-feature" ],
+        requirements=["pipeline-feature"],
         python_version="3.9",
         multiple_outputs=True,  # FIXME: multiple_outputs=True means must return a dict.
         system_site_packages=True,

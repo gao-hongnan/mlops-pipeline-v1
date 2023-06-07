@@ -12,6 +12,7 @@ jobs:
   format-check:
     runs-on:
       - ubuntu-latest
+      - windows-latest
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
