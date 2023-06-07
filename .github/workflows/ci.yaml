@@ -32,13 +32,13 @@ jobs:
         run: |
           python3 -m pip install --upgrade pip setuptools wheel
           python3 -m pip install -r requirements_dev.txt
-      - name: Run Black formatter check
+      - name: Run Black and Isort formatter check
         run: |
-          curl https://raw.githubusercontent.com/gao-hongnan/common-utils/main/scripts/devops/ci_formatter.sh \
+          curl https://raw.githubusercontent.com/gao-hongnan/common-utils/main/scripts/devops/ci/ci_formatter.sh \
           | bash
       - name: Run Pylint check
         run: |
           curl -o \
           ci_linter.sh \
-          https://raw.githubusercontent.com/gao-hongnan/common-utils/main/scripts/devops/ci_linter.sh && \
+          https://raw.githubusercontent.com/gao-hongnan/common-utils/main/scripts/devops/ci/ci_linter.sh && \
           bash ci_linter.sh pipeline-feature/dummy.py
