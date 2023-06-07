@@ -17,6 +17,20 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
+    - name: Environment setup
+      with:
+        python-version: 3.9
+        cache: pip
+    - name: Cache
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements_dev.txt') }}
+        restore-keys: ${{ runner.os }}-pip-
+    - name: Install dev dependencies
+      run: |
+        python3 -m pip install --upgrade pip setuptools wheel
+        python3 -m pip install -r requirements_dev.txt
     - name: Run Black formatter check
       run: |
         curl https://raw.githubusercontent.com/gao-hongnan/common-utils/main/scripts/devops/ci_formatter.sh \
