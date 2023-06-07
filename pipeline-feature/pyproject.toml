@@ -17,14 +17,6 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "numpy==1.24.3",
-    "requests",
-    "prettytable",
-    "rich",
-    "pydantic",
-    "python-dotenv",
-    "db_dtypes",
-    "pytz",
     "gaohn-common-utils"
 ]
 
