@@ -30,6 +30,7 @@ skip = [
     ".mypy_cache",
     ".tox",
     "venv_*",
+    "pipeline-feature/venv_pipeline_feature",
     "venv",
     ".venv",
     "_build",
@@ -40,6 +41,11 @@ skip = [
 
 [tool.pylint]
     [tool.pylint.'MASTER']
+    ignore-paths = [
+        "(.*\\/)?venv_.*\\/.*",
+        "(.*\\/)?\\.venv\\/.*",
+        "(.*\\/)?venv\\/.*",
+    ]
     ignore = [
         ".eggs",
         ".git",
