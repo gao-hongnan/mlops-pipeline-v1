@@ -16,7 +16,7 @@ env:
   ZONE: '${{ vars.MLOPS_PIPELINE_V1_INSTANCE_ZONE }}'
 
 jobs:
-  ci_cd:
+  cicd_airflow:
     runs-on: ubuntu-latest
     steps:
       - uses: 'actions/checkout@v3'
