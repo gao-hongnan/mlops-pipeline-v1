@@ -31,4 +31,4 @@ jobs:
           curl -o \
           ci_publish_package.sh \
           https://raw.githubusercontent.com/gao-hongnan/common-utils/main/scripts/devops/ci/ci_publish_package.sh && \
-          bash publish_package.sh -u $TWINE_USERNAME -p ${{ secrets.PYPI_API_TOKEN }}
+          bash ci_publish_package.sh -u $TWINE_USERNAME -p ${{ secrets.PYPI_API_TOKEN }}
