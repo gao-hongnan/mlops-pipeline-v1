@@ -1,1 +1,2 @@
 gaohn-common-utils
+hydra-core==1.3.2

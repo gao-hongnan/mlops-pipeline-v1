@@ -4,6 +4,55 @@
 
 Dummy prediction: use some features to predict `num_of_trades`.
 
+## SSH
+
+We create a new ssh key for this project to interact with GCP VM.
+We will make it passwordless for convenience.
+
+```bash
+ssh-keygen -t rsa -f ~/.ssh/<SSH-FILE-NAME> -C "<USERNAME>"
+```
+
+A concrete implementation is as follows:
+
+```bash
+ssh-keygen -t rsa -f ~/.ssh/mlops-pipeline-v1 -C "gaohn"
+```
+
+And then in to ssh into the VM, we need to add the ssh key to the VM.
+
+```bash
+ssh <USERNAME>@<EXTERNAL-IP-ADDRESS>
+```
+
+and once in the VM, we need to add the ssh key to the VM.
+
+```bash
+cd ~/.ssh
+```
+
+Open the `authorized_keys` file and paste the public key in.
+
+```bash
+nano authorized_keys
+```
+
+Back on your local machine, open the `gcp_vm_no_passphrase.pub` file in a text editor and copy its content.
+
+Paste the content into the `authorized_keys` file on the VM.
+
+Now one can ssh into the VM without password.
+
+```bash
+ssh -i ~/.ssh/<SSH-FILE-NAME> <USERNAME>@<EXTERNAL-IP-ADDRESS>
+```
+
+And to use the private ssh keys in github actions, we need to add the private key to github secrets.
+
+```bash
+cat ~/.ssh/<SSH-FILE-NAME> | gh secret set <SSH-FILE-NAME> -b-
+```
+
 ## Set GitHub Secrets and Vars
 
 > Have major problems setting default google ssh keys, so create your own and link to gcp vm.
@@ -101,3 +150,33 @@ Tools like [radon](https://radon.readthedocs.io/) can give you metrics about how
 ### Documentation Building and Testing
 
 If you have auto-generated documentation, you might have a CI step to build and test this documentation. Tools like [sphinx](https://www.sphinx-doc.org/) can help with this.
+
+### Markdown Lint
+
+```
+npm install -g markdownlint-cli && \
+touch .markdownlint.json && \
+```
+
+```
+npm install --save-dev --save-exact prettier
+```
+
+```
+# prettier
+function pr() {
+  if [ -z "$1" ]; then
+    echo "Error: TARGET_DIR is mandatory."
+    return 1
+  fi
+
+  TARGET_DIR="$1"
+  prettier "$TARGET_DIR" --write \
+    --prose-wrap always \
+    --print-width 80 \
+    --tab-width 4 \
+    --use-tabs true
+}
+```
+
+Run prettier -> `markdown;int --fix .`

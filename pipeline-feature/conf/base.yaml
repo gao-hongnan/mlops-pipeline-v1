@@ -1,0 +1,16 @@
+defaults:
+  - extract: base
+  # You typically want _self_ somewhere after the schema (base_config)
+  - _self_
+
+general:
+  output_dir: "../outputs/mlops_pipeline_feature_v1" # in sync with hydra output dir
+  project_id: ${env.}
+  google_application_credentials
+  bucket_name
+  table_name
+  dataset:
+
+hydra:
+  run:
+    dir: ${general.output_dir} # in sync with stores

@@ -1,22 +1,24 @@
-import logging
-import math
 import os
-import time
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional
-
+from typing import List
+from hydra.core.hydra_config import HydraConfig
+import hydra
 import pandas as pd
 import pytz
-import requests
 import rich
 from common_utils.cloud.gcp.storage.bigquery import BigQuery
 from common_utils.cloud.gcp.storage.gcs import GCS
+from common_utils.core.logger import Logger
 from dotenv import load_dotenv
+
 from google.cloud import bigquery
+from omegaconf import DictConfig
 from pydantic import BaseModel  # pylint: disable=no-name-in-module
-from rich.logging import RichHandler
 from rich.pretty import pprint
+
+from extract import extract_from_api
+from utils import interval_to_milliseconds
 
 # TODO: add logger to my common_utils
 # TODO: add transforms to elt like dbt and great expectations
@@ -24,15 +26,14 @@ from rich.pretty import pprint
 # TODO: split to multiple files
 
 # Setup logging
-logging.basicConfig(
-    level="INFO", format="%(message)s", datefmt="[%X]", handlers=[RichHandler()]
-)
-
-logger = logging.getLogger("rich")
+logger = Logger(
+    log_file="mlops_pipeline_feature_v1.log",
+    log_dir="../outputs/mlops_pipeline_feature_v1",
+).logger
 
 # Set environment variables.
 if os.getenv("ROOT_DIR") is None:
-    ROOT_DIR = str(Path.cwd().parent.parent)
+    ROOT_DIR = str(Path.cwd().parent)
     os.environ["ROOT_DIR"] = ROOT_DIR
     print(f"ROOT_DIR: {ROOT_DIR}")
 else:
@@ -53,101 +54,6 @@ rich.print(PROJECT_ID, GOOGLE_APPLICATION_CREDENTIALS, BUCKET_NAME)
 # files = gcs.list_gcs_files()
 
 # rich.print(files)
-
-
-def interval_to_milliseconds(interval: str) -> int:
-    if interval.endswith("m"):
-        return int(interval[:-1]) * 60 * 1000
-    elif interval.endswith("h"):
-        return int(interval[:-1]) * 60 * 60 * 1000
-    elif interval.endswith("d"):
-        return int(interval[:-1]) * 24 * 60 * 60 * 1000
-    else:
-        raise ValueError(f"Invalid interval format: {interval}")
-
-
-def get_binance_data(
-    symbol: str,
-    start_time: int,
-    end_time: Optional[int] = None,
-    interval: str = "1m",
-    limit: int = 1000,
-) -> pd.DataFrame:
-    base_url = "https://api.binance.com"
-    endpoint = "/api/v3/klines"
-    url = base_url + endpoint
-    # Convert interval to milliseconds
-    interval_in_milliseconds = interval_to_milliseconds(interval)
-
-    time_range = end_time - start_time  # total time range
-    pprint(f"time_range: {time_range}")
-    request_max = limit * interval_in_milliseconds
-    pprint(f"request_max: {request_max}")
-
-    start_iteration = start_time
-    end_iteration = start_time + request_max
-
-    params = {
-        "symbol": symbol,
-        "interval": interval,
-        "limit": limit,
-        "startTime": start_time,
-    }
-
-    if end_time is not None:
-        params["endTime"] = end_time
-
-    response_columns = [
-        "open_time",
-        "open",
-        "high",
-        "low",
-        "close",
-        "volume",
-        "close_time",
-        "quote_asset_volume",
-        "number_of_trades",
-        "taker_buy_base_asset_volume",
-        "taker_buy_quote_asset_volume",
-        "ignore",
-    ]
-
-    if time_range <= request_max:  # time range selected within 1000 rows limit
-        resp = requests.get(url=url, params=params, timeout=30)
-        data = resp.json()
-        df = pd.DataFrame(data, columns=response_columns)
-
-        time.sleep(1)
-
-    elif (
-        time_range > request_max
-    ):  # start_time and end_time selected > limit rows of data
-        df = pd.DataFrame()  # empty dataframe to append to
-        num_iterations = math.ceil(time_range / request_max)  # number of loops required
-        pprint(f"num_iterations: {num_iterations}")
-
-        for _ in range(num_iterations):
-            # make request with updated params
-            resp = requests.get(url=url, params=params, timeout=30)
-            data = resp.json()
-            _df = pd.DataFrame(data, columns=response_columns)
-
-            df = pd.concat([df, _df])
-
-            start_iteration = end_iteration
-            end_iteration = min(
-                end_iteration + request_max, end_time
-            )  # don't go beyond the actual end time
-            # adjust params
-
-            params["startTime"], params["endTime"] = (
-                start_iteration,
-                end_iteration,
-            )  # adjust params
-            time.sleep(1)
-
-    df.insert(0, "utc_datetime", pd.to_datetime(df["open_time"], unit="ms"))
-    return df
 
 
 def generate_bq_schema_from_pandas(df: pd.DataFrame) -> List[bigquery.SchemaField]:
@@ -240,12 +146,14 @@ def upload_latest_data(
         sgt = pytz.timezone("Asia/Singapore")
         time_now = int(datetime.now(sgt).timestamp() * 1000)
 
-        df = get_binance_data(
+        df, metadata = extract_from_api(
             symbol=symbol,
             start_time=start_time,
             end_time=time_now,
             interval=interval,
             limit=1000,
+            base_url="https://api.binance.com",
+            endpoint="/api/v3/klines",
         )
         metadata = Metadata()
         df = update_metadata(df, metadata)
@@ -287,12 +195,14 @@ def upload_latest_data(
         print(f"time_now={time_now}")
 
         # only pull data from start_time onwards, which is the latest date in the table
-        df = get_binance_data(
+        df, metadata = extract_from_api(
             symbol="BTCUSDT",
             start_time=start_time,
             end_time=time_now,
             interval="1m",
             limit=1000,
+            base_url="https://api.binance.com",
+            endpoint="/api/v3/klines",
         )
         print("df.head()", df.head())
 
@@ -325,15 +235,4 @@ def run():
 
 if __name__ == "__main__":
     # eg: int(datetime(2023, 6, 1, 8, 0, 0).timestamp() * 1000)
-    start_time = int(datetime(2023, 6, 1, 20, 0, 0).timestamp() * 1000)
-
-    upload_latest_data(
-        "BTCUSDT",  # "ETHUSDT
-        "1m",
-        PROJECT_ID,
-        GOOGLE_APPLICATION_CREDENTIALS,
-        BUCKET_NAME,
-        dataset="mlops_pipeline_v1_staging",
-        table_name="binance_btcusdt_spot",
-        start_time=start_time,
-    )
+    run()
