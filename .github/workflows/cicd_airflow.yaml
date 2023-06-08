@@ -25,15 +25,18 @@ jobs:
         uses: 'google-github-actions/auth@v0'
         with:
           credentials_json: '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}'
-      - name: Execute remote SSH commands
-        uses: appleboy/ssh-action@v0.1.10
+      - id: 'compute-ssh'
+        uses: 'google-github-actions/ssh-compute@v0'
         with:
-          host: 34.143.176.217
-          username: ${{ vars.MLOPS_PIPELINE_V1_INSTANCE_USER }}
-          key: ${{ secrets.GCP_SSH_PRIVATE_KEY }}
-          script: |
-            cd ~/mlops-pipeline-v1
-            git pull
-            cd pipeline-feature
-            curl -o publish_package.sh https://raw.githubusercontent.com/gao-hongnan/common-utils/main/scripts/devops/ci/ci_publish_package.sh
+          project_id: '${{ env.CLOUDSDK_CORE_PROJECT }}'
+          user: '${{ env.USER }}'
+          instance_name: '${{ env.INSTANCE_NAME }}'
+          zone: '${{ env.ZONE }}'
+          ssh_private_key: '${{ secrets.GCP_SSH_PRIVATE_KEY }}'
+          command: >
+            cd ~/mlops-pipeline-v1 &&
+            git pull &&
+            cd pipeline-feature &&
+            curl -o publish_package.sh \
+            https://raw.githubusercontent.com/gao-hongnan/common-utils/main/scripts/devops/ci/ci_publish_package.sh && \
             bash publish_package.sh -u __token__ -p ${{ secrets.PYPI_TOKEN }}
