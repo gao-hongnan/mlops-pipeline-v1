@@ -1,0 +1,42 @@
+name: CD/CD for the ml-pipeline that builds all the pipeline modules and pushes them to the private PyPI registry. From where Airflow will install the latest versions and use them in the next run.
+
+on:
+  push:
+    paths-ignore:
+      - 'app-api/'
+      - 'app-frontend/'
+      - '**/*.yml'
+      - '**/*.md'
+    branches: [ "main" ]
+
+env:
+  CLOUDSDK_CORE_PROJECT: '${{ vars.MLOPS_PIPELINE_V1_INSTANCE_PROJECT }}'
+  USER: '${{ vars.MLOPS_PIPELINE_V1_INSTANCE_USER }}'
+  INSTANCE_NAME: '${{ vars.MLOPS_PIPELINE_V1_INSTANCE_NAME }}'
+  ZONE: '${{ vars.MLOPS_PIPELINE_V1_INSTANCE_ZONE }}'
+
+jobs:
+  ci_cd:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: 'actions/checkout@v3'
+
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v0'
+        with:
+          credentials_json: '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}'
+      - id: 'compute-ssh'
+        uses: 'google-github-actions/ssh-compute@v0'
+        with:
+          project_id: '${{ env.CLOUDSDK_CORE_PROJECT }}'
+          user: '${{ env.USER }}'
+          instance_name: '${{ env.INSTANCE_NAME }}'
+          zone: '${{ env.ZONE }}'
+          ssh_private_key: '${{ secrets.GCP_SSH_PRIVATE_KEY }}'
+          command: >
+            cd ~/mlops-pipeline-v1 &&
+            git pull &&
+            cd pipeline-feature &&
+            curl -o publish_package.sh \
+            https://raw.githubusercontent.com/gao-hongnan/common-utils/main/scripts/devops/ci/ci_publish_package.sh && \
+            bash publish_package.sh -u __token__ -p ${{ secrets.PYPI_TOKEN }}

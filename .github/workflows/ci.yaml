@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  format-check:
+  continuous-integration:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:

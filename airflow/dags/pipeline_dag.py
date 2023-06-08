@@ -1,3 +1,4 @@
+# pylint: disable=unused-import,no-name-in-module
 from datetime import datetime
 
 from airflow.decorators import dag, task

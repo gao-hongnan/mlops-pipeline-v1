@@ -198,3 +198,85 @@ docker compose --env-file .env up --build -d
 ```
 
 - This means Airflow UI is accessible at http://34.143.176.217:8080
+
+## Flow
+
+> You need to setup the docker steps above manually for the first time. Can we automate the above as well
+    by pushing a docker image to GCP and then run it in the VM?
+
+> For now I will ssh in and update packages and dags from github actions cicd.
+
+I deployed my airflow server to a GCP VM instance in detached mode so it is running there under an external IP Address.
+The airflow pipeline orchestrates the following steps:
+
+- Feature Pipeline
+    - Extract
+    - Load
+    - Transform
+- Model Pipeline
+    - Train
+    - Evaluate
+    - Validate
+- Deploy Pipeline
+    - Deploy
+    - Predict
+    - Monitor
+
+So intuitively, airflow is in itself a CICD pipeline that orchestrates the above steps because
+i fetch data daily for retraining and comparing with previous model performance. If the new model is better, then i deploy it to production.
+
+What I need help is the "correct" and industry way of deploying my airflow pipeline to production.
+Currently, I am referring to a similar repo doing:
+
+```yaml
+jobs:
+  ci_cd:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: 'actions/checkout@v3'
+
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v0'
+        with:
+          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+      - id: 'compute-ssh'
+        uses: 'google-github-actions/ssh-compute@v0'
+        with:
+          project_id: '${{ env.CLOUDSDK_CORE_PROJECT }}'
+          user: '${{ env.USER }}'
+          instance_name: '${{ env.INSTANCE_NAME }}'
+          zone: '${{ env.ZONE }}'
+          ssh_private_key: '${{ secrets.GCP_SSH_PRIVATE_KEY }}'
+          command: >
+            cd ~/energy-forecasting &&
+            git pull &&
+            sh deploy/ml-pipeline.sh
+```
+
+where `ml-pipeline.sh` is
+
+```bash
+#!/bin/bash
+
+# Build and publish the feature-pipeline, training-pipeline, and batch-prediction-pipeline packages.
+# This is done so that the pipelines can be run from the CLI.
+# The pipelines are executed in the feature-pipeline, training-pipeline, and batch-prediction-pipeline
+# directories, so we must change directories before building and publishing the packages.
+# The my-pypi repository must be defined in the project's poetry.toml file.
+
+cd feature-pipeline
+poetry build
+poetry publish -r my-pypi
+
+cd ../training-pipeline
+poetry build
+poetry publish -r my-pypi
+
+cd ../batch-prediction-pipeline
+poetry build
+poetry publish -r my-pypi
+```
+
+What these steps do is to build and publish the feature-pipeline, training-pipeline, and batch-prediction-pipeline packages to my private pypi server.
+But I do not understand what he is trying to do. I do know that his airflow dags needs to
+install the packages from the private pypi server. But I do not understand why he needs to build and publish the packages to the private pypi server.

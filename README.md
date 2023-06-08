@@ -4,6 +4,32 @@
 
 Dummy prediction: use some features to predict `num_of_trades`.
 
+## Set GitHub Secrets and Vars
+
+```bash
+# Define the paths and secret names
+ENV_FILE_PATH=".env"
+GOOGLE_APPLICATION_CREDENTIALS="GOOGLE_APPLICATION_CREDENTIALS"
+GOOGLE_APPLICATION_CREDENTIALS_JSON="GOOGLE_APPLICATION_CREDENTIALS_JSON"
+GOOGLE_COMPUTE_ENGINE_SSH_KEY_PATH="~/.ssh/google_compute_engine"
+GOOGLE_COMPUTE_ENGINE_SSH_KEY_VALUE="GCP_SSH_PRIVATE_KEY"
+
+# Load the environment variables from the .env file
+export $(grep -v '^#' $ENV_FILE_PATH | xargs)
+
+# Use jq to format the JSON file pointed to by the environment variable, and pipe this into gh secret set
+jq -c . "${!GOOGLE_APPLICATION_CREDENTIALS}" | gh secret set $GOOGLE_APPLICATION_CREDENTIALS_JSON -b-
+
+# Read the file content and pipe it into gh secret set
+cat $GOOGLE_COMPUTE_ENGINE_SSH_KEY_PATH | gh secret set $GOOGLE_COMPUTE_ENGINE_SSH_KEY_VALUE -b-
+```
+
+Set the default environment variables
+
+```bash
+gh variable set -f .env.default
+```
+
 ## DataOPs
 
 - Extract data from source
@@ -48,6 +74,12 @@ Static type checkers like [mypy](http://mypy-lang.org/) can be used to perform s
 ### Integration Testing
 
 Integration tests look at how different parts of your system work together. These might be particularly important for ML workflows, where data pipelines, training scripts, and evaluation scripts all need to interact smoothly.
+
+### System Testing
+
+System testing falls within the scope of black-box testing, and as such, should require no knowledge of the inner design of the code or logic.
+
+In a machine learning context, system testing might involve running the entire machine learning pipeline with a predefined dataset and checking if the output is as expected. You would typically look to see if the entire system, when run end-to-end, produces the expected results, given a specific input. This could involve evaluating overall system performance, checking the quality of the predictions, and validating that the system meets all the specified requirements.
 
 ## Performance Testing/Benchmarking
 
