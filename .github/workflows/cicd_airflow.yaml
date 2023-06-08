@@ -1,4 +1,8 @@
-name: CD/CD for the ml-pipeline that builds all the pipeline modules and pushes them to the private PyPI registry. From where Airflow will install the latest versions and use them in the next run.
+name: CI/CD Airflow
+
+# This workflow performs CI/CD for a machine learning pipeline.
+# On each push to the 'main' branch (ignoring certain paths), it builds all pipeline modules and pushes them to a private PyPI registry.
+# Airflow then installs the latest versions from this registry and uses them in its next run.
 
 on:
   push:
@@ -7,6 +11,7 @@ on:
       - 'app-frontend/'
       - '**/*.yml'
       - '**/*.md'
+      - '**/*.sh'
     branches: [ "main" ]
 
 env:
