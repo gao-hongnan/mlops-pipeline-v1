@@ -17,8 +17,8 @@ from omegaconf import DictConfig
 from pydantic import BaseModel  # pylint: disable=no-name-in-module
 from rich.pretty import pprint
 
-from extract import extract_from_api
-from utils import interval_to_milliseconds
+from mlops_pipeline_feature_v1.extract import extract_from_api
+from mlops_pipeline_feature_v1.utils import interval_to_milliseconds
 
 # TODO: add logger to my common_utils
 # TODO: add transforms to elt like dbt and great expectations
