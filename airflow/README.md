@@ -35,27 +35,9 @@ Please note that the approach you choose depends on your specific setup and requ
 ## Commands
 
 ```bash
-curl -LfO 'https://airflow.apache.org/docs/apache-airflow/2.6.1/docker-compose.yaml'
-mkdir -p ./dags ./logs ./plugins ./config
-mkdir -p ./dags/credentials
-cp GCP-credentials.json ./dags/credentials/
-touch ./dags/.gitingore
-echo "# Ignore everything in this directory
-*
-# Except this file
-!.gitignore" > ./dags/.gitignore
 
-touch ./dags/__init__.py ./dags/pipeline_dag.py
-cat python code to ./dags/pipeline_dag.py
-
-
-echo -e "AIRFLOW_UID=$(id -u)" > .env # if linux else macos is 50000 default
-# FOR MACOS AIRFLOW_UID=50000 # FOR LINUX AIRFLOW_UID=$(id -u)
-echo "ROOT_DIR=/opt/airflow/dags" >> .env
-# UPDATE .env with my local .env
-echo "credentials" >> ./dags/.env # TO REPLACE
 sudo chmod 777 ./logs ./plugins
-echo env ROOT_DIR: ${ROOT_DIR:-/opt/airflow/dags} to docker-compose.yaml # TODO: check if AIRFLOW_PROJ_DIR is the same as ROOT_DIR if yes then remove ROOT_DIR
+
 
 # TODO: AIRFLOW__CORE__LOAD_EXAMPLES: 'false' # to remove example dags
 # Initialize the Airflow database
@@ -135,38 +117,60 @@ newgrp docker
     cd ~ && \
     git clone https://github.com/gao-hongnan/mlops-pipeline-v1.git && \
     cd mlops-pipeline-v1
-    # git checkout dev
     ```
 
-- mkdir credentials if not exist
+- Setup airflow folders
 
     ```bash
-    mkdir -p airflow/dags/credentials
+    ~ LOCAL $
+    mkdir -p airflow && \
+    cd airflow && \
+    mkdir -p ./dags ./logs ./plugins ./config ./dags/credentials && \
+    touch ./dags/.gitignore ./dags/__init__.py ./dags/pipeline_dag.py && \
+    echo "# Ignore everything in this directory
+    *
+    # Except this file
+    !.gitignore" > ./dags/.gitignore
+    ```
+
+    ```bash
+    cd airflow && \
+    if [[ "$OSTYPE" == "linux-gnu" ]]; then
+        AIRFLOW_UID=$(id -u)
+    else
+        AIRFLOW_UID=50000
+    fi && \
+
+    echo "AIRFLOW_UID=$AIRFLOW_UID" > .env && \
+    echo "ROOT_DIR=/opt/airflow/dags" >> .env && \
+    ```
+
+- pull dockercompose
+
+    ```bash
+    ~ LOCAL $
+    cd airflow/
+    curl -LfO 'https://airflow.apache.org/docs/apache-airflow/2.6.1/docker-compose.yaml'
+    echo env ROOT_DIR: ${ROOT_DIR:-/opt/airflow/dags} to docker-compose.yaml # TODO: check if AIRFLOW_PROJ_DIR is the same as ROOT_DIR if yes then remove ROOT_DIR
     ```
 
 - send gcp json to vm
 
     ```bash
-    $ local terminal
-    gcloud compute scp --recurse \
-        --zone asia-southeast1-a \
-        --quiet \
-        --tunnel-through-iap \
-        --project gao-hongnan \
-        /Users/gaohn/gcp-storage-service-account.json \
-        mlops-pipeline-v1:~/mlops-pipeline-v1/airflow/dags/credentials/
+    ~ $ gcloud compute scp --recurse \
+            --zone asia-southeast1-a \
+            --quiet \
+            --tunnel-through-iap \
+            --project gao-hongnan \
+            /Users/gaohn/gcp-storage-service-account.json \
+            mlops-pipeline-v1:~/mlops-pipeline-v1/airflow/dags/credentials/
     ```
 
-    ```bash
-    # from airflow/
-    gcloud compute scp --recurse \
-        --zone asia-southeast1-a \
-        --quiet \
-        --tunnel-through-iap \
-        --project gao-hongnan \
-        .env \
-        mlops-pipeline-v1:~/mlops-pipeline-v1/airflow/.env
+- send .env to vm dont need send `airflow/.env` since it is defined earlier but need send
+    `airflow/dags/.env`
 
+    ```bash
+    ~/mlops-pipeline-v1/airflow $
     gcloud compute scp --recurse \
         --zone asia-southeast1-a \
         --quiet \
@@ -175,9 +179,13 @@ newgrp docker
         ./dags/.env \
         mlops-pipeline-v1:~/mlops-pipeline-v1/airflow/dags/.env
     ```
-sudo chown -R $USER:$USER ./airflow/dags/
-chmod -R u+w ./airflow/dags/
+- change permission of airflow/dags
 
+```bash
+~/mlops-pipeline-v1/ $
+sudo chown -R $USER:$USER ./airflow/dags/ && \
+chmod -R u+w ./airflow/dags/
+```
 
 - run Airflow Pipeline above
 
@@ -190,14 +198,6 @@ docker compose --env-file .env up --build -d
 
 the steps above is explained below:
 
-```
-# Initialize the Airflow database
-docker compose up airflow-init
-
-# Start up all services
-# Note: You should set up the private PyPi server credentials before running this command.
-docker compose --env-file .env up --build -d
-```
 
 - This means Airflow UI is accessible at http://34.143.176.217:8080
 
@@ -207,6 +207,7 @@ docker compose --env-file .env up --build -d
     by pushing a docker image to GCP and then run it in the VM?
 
 > For now I will ssh in and update packages and dags from github actions cicd.
+> For instance, if i package my airflow pipeline into a docker image and push it to GCP, then i can deploy this docker as a service instead? I definitely believe this should be the way to go but for now follow manual steps.
 
 I deployed my airflow server to a GCP VM instance in detached mode so it is running there under an external IP Address.
 The airflow pipeline orchestrates the following steps:
