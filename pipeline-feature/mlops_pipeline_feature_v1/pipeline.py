@@ -28,7 +28,8 @@ from mlops_pipeline_feature_v1.utils import interval_to_milliseconds
 # Setup logging
 logger = Logger(
     log_file="mlops_pipeline_feature_v1.log",
-    log_dir="../outputs/mlops_pipeline_feature_v1",
+    # log_dir="../outputs/mlops_pipeline_feature_v1",
+    log_dir=None,
 ).logger
 
 # Set environment variables.
