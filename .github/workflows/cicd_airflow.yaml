@@ -37,6 +37,5 @@ jobs:
             cd ~/mlops-pipeline-v1 &&
             git pull &&
             cd pipeline-feature &&
-            curl -o publish_package.sh \
-            https://raw.githubusercontent.com/gao-hongnan/common-utils/main/scripts/devops/ci/ci_publish_package.sh && \
+            curl -o publish_package.sh https://raw.githubusercontent.com/gao-hongnan/common-utils/main/scripts/devops/ci/ci_publish_package.sh &&
             bash publish_package.sh -u __token__ -p ${{ secrets.PYPI_TOKEN }}
