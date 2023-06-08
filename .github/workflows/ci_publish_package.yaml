@@ -3,7 +3,7 @@ name: Publish Python Package
 on:
   push:
     branches:
-      - dev
+      - main
 
 jobs:
   build-and-publish:
@@ -28,6 +28,7 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
         run: |
           cd ${{ github.workspace }}/pipeline-feature && \
-          curl -o publish_package.sh \
+          curl -o \
+          ci_publish_package.sh \
           https://raw.githubusercontent.com/gao-hongnan/common-utils/main/scripts/devops/ci/ci_publish_package.sh && \
-          bash publish_package.sh -u __token__ -p ${{ secrets.PYPI_TOKEN }}
+          bash publish_package.sh -u $TWINE_USERNAME -p ${{ secrets.PYPI_API_TOKEN }}
