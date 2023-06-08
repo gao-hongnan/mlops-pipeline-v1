@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pipeline-feature"
-version = "0.0.28"
+version = "0.0.29"
 authors = [
   { name="Gao Hongnan", email="hongnangao@gmail.com" },
 ]

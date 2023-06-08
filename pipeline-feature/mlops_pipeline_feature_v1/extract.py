@@ -4,7 +4,7 @@ from typing import Any, Dict, Optional, Tuple
 
 import pandas as pd
 import requests
-from utils import interval_to_milliseconds
+from mlops_pipeline_feature_v1.utils import interval_to_milliseconds
 
 
 def extract_from_api(
