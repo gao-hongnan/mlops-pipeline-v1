@@ -6,6 +6,8 @@ Dummy prediction: use some features to predict `num_of_trades`.
 
 ## Set GitHub Secrets and Vars
 
+> Have major problems setting default google ssh keys, so create your own and link to gcp vm.
+
 ```bash
 # Define the paths and secret names
 ENV_FILE_PATH=".env"

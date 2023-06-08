@@ -175,6 +175,8 @@ newgrp docker
         ./dags/.env \
         mlops-pipeline-v1:~/mlops-pipeline-v1/airflow/dags/.env
     ```
+sudo chown -R $USER:$USER ./airflow/dags/
+chmod -R u+w ./airflow/dags/
 
 
 - run Airflow Pipeline above
