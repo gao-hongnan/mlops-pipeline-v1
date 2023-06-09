@@ -39,6 +39,7 @@ def generate_bq_schema_from_pandas(df: pd.DataFrame) -> List[bigquery.SchemaFiel
         "object": bigquery.enums.SqlTypeNames.STRING,
         "bool": bigquery.enums.SqlTypeNames.BOOL,
         "datetime64[ns]": bigquery.enums.SqlTypeNames.DATETIME,
+        "datetime64[ns, Asia/Singapore]": bigquery.enums.SqlTypeNames.DATETIME,
     }
 
     schema = []

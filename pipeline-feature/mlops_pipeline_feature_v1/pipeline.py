@@ -20,8 +20,6 @@ from rich.pretty import pprint
 from mlops_pipeline_feature_v1 import extract, load, transform
 from mlops_pipeline_feature_v1.utils import interval_to_milliseconds
 
-import load, extract, transform
-from utils import interval_to_milliseconds
 
 # TODO: add logger to my common_utils
 # TODO: add transforms to elt like dbt and great expectations
@@ -120,7 +118,7 @@ def upload_latest_data(
         sgt = pytz.timezone("Asia/Singapore")
         time_now = int(datetime.now(sgt).timestamp() * 1000)
 
-        df, metadata = extract.from_api(
+        df, _ = extract.from_api(
             symbol=symbol,
             start_time=start_time,
             end_time=time_now,
@@ -170,7 +168,7 @@ def upload_latest_data(
         print(f"time_now={time_now}")
 
         # only pull data from start_time onwards, which is the latest date in the table
-        df, metadata = extract.from_api(
+        df, _ = extract.from_api(
             symbol="BTCUSDT",
             start_time=start_time,
             end_time=time_now,
