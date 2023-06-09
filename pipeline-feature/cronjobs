@@ -1,2 +1,2 @@
-*/1 * * * * /opt/venv/bin/python3 /gaohn/mlops_pipeline_feature_v1/pipeline.py >> /var/log/cron.log 2>&1
+*/1 * * * * /opt/venv/bin/python3 /gaohn/pipeline-feature/mlops_pipeline_feature_v1/pipeline.py >> /var/log/cron.log 2>&1
 

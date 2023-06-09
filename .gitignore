@@ -4,6 +4,9 @@
 # ouputs
 outputs/
 
+# secrets
+gcp-storage-service-account.json
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -127,6 +130,7 @@ celerybeat.pid
 
 # Environments
 .env
+.env.docker
 .secrets
 secrets.*
 .venv

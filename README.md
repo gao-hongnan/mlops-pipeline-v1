@@ -4,6 +4,13 @@
 
 Dummy prediction: use some features to predict `num_of_trades`.
 
+## Docker
+
+```bash
+docker compose down && \
+docker compose --env-file .env up --build -d
+```
+
 ## SSH
 
 We create a new ssh key for this project to interact with GCP VM.

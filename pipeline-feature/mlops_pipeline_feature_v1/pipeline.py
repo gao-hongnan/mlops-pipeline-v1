@@ -15,6 +15,7 @@ from mlops_pipeline_feature_v1 import extract, load, transform
 from mlops_pipeline_feature_v1.utils import interval_to_milliseconds
 from omegaconf import DictConfig
 from rich.pretty import pprint
+from dotenv import load_dotenv
 
 # TODO: add logger to my common_utils
 # TODO: add transforms to elt like dbt and great expectations
@@ -22,10 +23,17 @@ from rich.pretty import pprint
 # TODO: split to multiple files
 # Set environment variables.
 
+DOCKER = True
+
 ROOT_DIR = get_root_dir(env_var="ROOT_DIR", root_dir=".")
 pprint(ROOT_DIR)
 os.environ["ROOT_DIR"] = str(ROOT_DIR)
-load_env_vars(root_dir=ROOT_DIR)
+if DOCKER:
+    # Load environment variables from .env file
+    load_dotenv("/gaohn/.env.docker")
+else:
+    load_env_vars(root_dir=ROOT_DIR)
+
 PROJECT_ID = os.getenv("PROJECT_ID")
 GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 BUCKET_NAME = os.getenv("BUCKET_NAME")

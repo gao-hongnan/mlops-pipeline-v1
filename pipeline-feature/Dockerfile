@@ -1,7 +1,8 @@
 # Base image
 FROM python:3.9-slim-buster as builder
 
-WORKDIR /gaohn
+# Set work directory to /gaohn/pipeline-feature
+WORKDIR /gaohn/pipeline-feature
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -14,11 +15,11 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy only requirements, to cache them in docker layer
-COPY requirements.txt .
-COPY requirements_dev.txt .
+COPY ./requirements.txt .
+COPY ./requirements_dev.txt .
 RUN python3 -m pip install --upgrade pip && \
     python3 -m pip install --no-cache-dir -r requirements.txt && \
-    python3 -m pip install --no-cache-dir -r requirements_dev.txt \
+    python3 -m pip install --no-cache-dir -r requirements_dev.txt && \
     pip install -U pipeline-feature
 
 # This is the real runner for my app
@@ -29,18 +30,20 @@ RUN apt-get update && apt-get install -y cron
 
 # Copy from builder image
 COPY --from=builder /opt/venv /opt/venv
+COPY --from=builder /gaohn/pipeline-feature /gaohn/pipeline-feature
 
-# Set work dir again
-WORKDIR /gaohn
+# Set work dir again to the pipeline-feature subdirectory
+WORKDIR /gaohn/pipeline-feature
 
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy the rest of the application
-COPY conf conf
-COPY mlops_pipeline_feature_v1 mlops_pipeline_feature_v1
+COPY ./conf conf
+COPY ./mlops_pipeline_feature_v1 mlops_pipeline_feature_v1
+COPY ./gcp-storage-service-account.json /gaohn/gcp-storage-service-account.json
 
 # Copy the cronjob file
-COPY cronjobs /etc/cron.d/cronjobs
+COPY ./cronjobs /etc/cron.d/cronjobs
 
 # Give execution rights on the cron job
 RUN chmod 0644 /etc/cron.d/cronjobs

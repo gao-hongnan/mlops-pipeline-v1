@@ -5,8 +5,9 @@ services:
       context: ./pipeline-feature
       dockerfile: Dockerfile
     env_file:
-      - .env
+      - ./.env.docker # assuming the .env file is at the root of your project
     volumes:
-      - ./pipeline-feature:/gaohn
+      - ./pipeline-feature:/gaohn/pipeline-feature
       - ./config:/etc/cron.d
+      - .env.docker:/gaohn/.env.docker
     command: [ "sh", "-c", "cron && tail -f /var/log/cron.log" ]
