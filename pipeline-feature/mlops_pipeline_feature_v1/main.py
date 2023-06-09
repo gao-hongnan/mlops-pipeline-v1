@@ -1,30 +1,6 @@
-import hydra
-from omegaconf import DictConfig
-import os
-from datetime import datetime
-from pathlib import Path
-from typing import List
-
-import hydra
-import pandas as pd
-import pytz
-import rich
-from omegaconf import OmegaConf
-
-from common_utils.cloud.gcp.storage.bigquery import BigQuery
-from common_utils.cloud.gcp.storage.gcs import GCS
-from common_utils.core.logger import Logger
-from dotenv import load_dotenv
 from hydra import compose, initialize
-
-from google.cloud import bigquery
 from omegaconf import DictConfig
-from pydantic import BaseModel  # pylint: disable=no-name-in-module
 from rich.pretty import pprint
-
-from extract import extract_from_api
-from utils import interval_to_milliseconds
-from hydra.core.hydra_config import HydraConfig
 
 # TODO: add logger to my common_utils
 # TODO: add transforms to elt like dbt and great expectations

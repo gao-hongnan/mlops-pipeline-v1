@@ -1,5 +1,10 @@
 # Airflow Pipeline
 
+## TODO
+
+1. - artifacts-output-volume:/opt/airflow/outputs not used cause     ROOT_DIR: ${ROOT_DIR:-/opt/airflow/dags}
+means we write outputs to dags folder.
+
 See article, the `.env` file in `airflow/` contains `AIRFLOW_UID` and `ROOT_DIR`
 for airflow. The `.env` file in `airflow/dags/` will contain credentials.
 
@@ -179,6 +184,8 @@ newgrp docker
     # TODO: check if AIRFLOW_PROJ_DIR is the same as ROOT_DIR if yes then remove ROOT_DIR
     ```
 
+    note i set root_dir inside compose as well as mount an additional volume
+
 - send gcp json to vm
 
     ```bash
@@ -212,6 +219,8 @@ newgrp docker
 sudo chown -R $USER:$USER ./airflow/dags/ && \
 chmod -R u+w ./airflow/dags/
 ```
+
+
 
 - run Airflow Pipeline above
 

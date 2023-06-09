@@ -1,32 +1,27 @@
 import os
+import time
 from datetime import datetime
-from pathlib import Path
 from typing import List
-from hydra.core.hydra_config import HydraConfig
-import hydra
+
 import pandas as pd
 import pytz
 import rich
 from common_utils.cloud.gcp.storage.bigquery import BigQuery
 from common_utils.cloud.gcp.storage.gcs import GCS
+from common_utils.core.common import get_root_dir, load_env_vars
 from common_utils.core.logger import Logger
-from common_utils.core.common import load_env_vars, get_root_dir
-from dotenv import load_dotenv
-
 from google.cloud import bigquery
+from hydra import compose, initialize
+from mlops_pipeline_feature_v1.extract import extract_from_api
+from mlops_pipeline_feature_v1.utils import interval_to_milliseconds
 from omegaconf import DictConfig
 from pydantic import BaseModel  # pylint: disable=no-name-in-module
 from rich.pretty import pprint
-
-from mlops_pipeline_feature_v1.extract import extract_from_api
-from mlops_pipeline_feature_v1.utils import interval_to_milliseconds
 
 # TODO: add logger to my common_utils
 # TODO: add transforms to elt like dbt and great expectations
 # TODO: add tests
 # TODO: split to multiple files
-import time
-
 # Set environment variables.
 
 ROOT_DIR = get_root_dir(env_var="ROOT_DIR", root_dir=".")
@@ -51,6 +46,21 @@ DEBUG = False
 
 if DEBUG:
     time.sleep(600)
+
+
+def load_configs() -> DictConfig:
+    initialize(config_path="../conf", version_base=None)
+    cfg: DictConfig = compose(
+        config_name="base",
+        overrides=["extract.start_time=1685620800000"],
+        return_hydra_config=True,
+    )
+    pprint(cfg)
+    pprint(cfg.extract)
+    pprint(cfg.general.start_time)
+
+    # print(OmegaConf.to_yaml(cfg, resolve=True))
+    return cfg
 
 
 def generate_bq_schema_from_pandas(df: pd.DataFrame) -> List[bigquery.SchemaField]:

@@ -11,6 +11,7 @@ from airflow.utils.trigger_rule import TriggerRule
 # Variable.set("ml_pipeline_feature_group_version", "5")
 # Variable.set("ml_pipeline_days_export", "30")
 # Variable.set("ml_pipeline_should_run_hyperparameter_tuning", False)
+# pylint: disable=import-outside-toplevel
 
 
 @dag(
@@ -54,10 +55,9 @@ def ml_pipeline():
         Returns:
             Metadata of the feature pipeline run.
         """
-
-        from datetime import datetime
-
         from mlops_pipeline_feature_v1 import pipeline
+
+        cfg = pipeline.load_configs()
 
         pipeline.run()
         return {"feature_pipeline_run_id": "123"}
