@@ -69,7 +69,7 @@ def load_configs() -> DictConfig:
     return cfg
 
 
-def upload_latest_data(
+def pipeline(
     symbol: str,
     start_time: int,
     interval: str = "1m",
@@ -210,9 +210,10 @@ def upload_latest_data(
 
 
 def run():
+    # eg: int(datetime(2023, 6, 1, 8, 0, 0).timestamp() * 1000)
     start_time = int(datetime(2023, 6, 1, 20, 0, 0).timestamp() * 1000)
 
-    upload_latest_data(
+    pipeline(
         symbol="BTCUSDT",  # "ETHUSDT
         start_time=start_time,
         interval="1m",
@@ -229,5 +230,4 @@ def run():
 
 
 if __name__ == "__main__":
-    # eg: int(datetime(2023, 6, 1, 8, 0, 0).timestamp() * 1000)
     run()

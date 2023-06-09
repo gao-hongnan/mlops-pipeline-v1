@@ -5,7 +5,9 @@ def cast_columns(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
 
     # TODO: here is hardcoded
-    df["utc_singapore_time"] = df["utc_datetime"].dt.tz_convert("Asia/Singapore")
+    df["utc_singapore_time"] = (
+        df["utc_datetime"].dt.tz_localize("UTC").dt.tz_convert("Asia/Singapore")
+    )
     df["open_time"] = pd.to_datetime(df["open_time"], unit="ms")
     df["close_time"] = pd.to_datetime(df["close_time"], unit="ms")
 
