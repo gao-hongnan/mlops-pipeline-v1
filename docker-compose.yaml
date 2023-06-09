@@ -1,0 +1,12 @@
+version: '3'
+services:
+  pipeline-feature:
+    build:
+      context: ./pipeline-feature
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    volumes:
+      - ./pipeline-feature:/gaohn
+      - ./config:/etc/cron.d
+    command: [ "sh", "-c", "cron && tail -f /var/log/cron.log" ]
