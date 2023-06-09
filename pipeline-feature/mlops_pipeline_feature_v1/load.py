@@ -1,22 +1,15 @@
-import os
-import time
+"""Technically, this is a load and transform module.
+In airbyte lingo, it is tweak and load where you add some metadata to the data
+before loading it to the destination."""
 from datetime import datetime
 from typing import List, Optional
-from google.cloud import storage
 
 import pandas as pd
 import pytz
-import rich
 from common_utils.cloud.gcp.storage.bigquery import BigQuery
 from common_utils.cloud.gcp.storage.gcs import GCS
-from common_utils.core.common import get_root_dir, load_env_vars
-from common_utils.core.logger import Logger
-from google.cloud import bigquery
-from hydra import compose, initialize
-from pathlib import Path
-from omegaconf import DictConfig
+from google.cloud import bigquery, storage
 from pydantic import BaseModel  # pylint: disable=no-name-in-module
-from rich.pretty import pprint
 
 
 def generate_bq_schema_from_pandas(df: pd.DataFrame) -> List[bigquery.SchemaField]:

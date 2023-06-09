@@ -72,7 +72,6 @@ def load_configs() -> DictConfig:
 def upload_latest_data(
     symbol: str,
     start_time: int,
-    end_time: Optional[int] = None,
     interval: str = "1m",
     limit: int = 1000,
     base_url: str = "https://api.binance.com",
@@ -81,7 +80,8 @@ def upload_latest_data(
     google_application_credentials: str = GOOGLE_APPLICATION_CREDENTIALS,
     bucket_name: str = None,
     dataset: str = None,  # for example bigquery dataset
-    table_name: str = None,  # for example bigquery table id
+    raw_table_name: str = None,  # for example bigquery table id
+    processed_table_name: str = None,  # for example bigquery table id
 ):
     gcs = GCS(
         project_id=project_id,
@@ -96,7 +96,7 @@ def upload_latest_data(
         project_id=project_id,
         google_application_credentials=google_application_credentials,
         dataset=dataset,
-        table_name=table_name,
+        table_name=raw_table_name,
     )
 
     # flag to check if dataset exists
@@ -123,9 +123,9 @@ def upload_latest_data(
             start_time=start_time,
             end_time=time_now,
             interval=interval,
-            limit=1000,
-            base_url="https://api.binance.com",
-            endpoint="/api/v3/klines",
+            limit=limit,
+            base_url=base_url,
+            endpoint=endpoint,
         )
 
         df = load.update_metadata(df, metadata)
@@ -134,7 +134,7 @@ def upload_latest_data(
             df,
             gcs=gcs,
             dataset=dataset,
-            table_name=table_name,
+            table_name=raw_table_name,
             updated_at=updated_at,
         )
         logger.info(f"File {blob.name} uploaded to {bucket_name}.")
@@ -142,8 +142,12 @@ def upload_latest_data(
         schema = load.generate_bq_schema_from_pandas(df)
         pprint(schema)
 
-        bq.create_dataset()
-        bq.create_table(schema=schema)  # empty table with schema
+        if not dataset_exists:
+            bq.create_dataset()
+
+        if not table_exists:
+            bq.create_table(schema=schema)
+
         load.to_bigquery(df, bq=bq, write_disposition="WRITE_APPEND", schema=schema)
     else:
         logger.info("Dataset and table already exist. Fetching the latest date now...")
@@ -154,28 +158,24 @@ def upload_latest_data(
         FROM `{bq.table_id}`
         """
         max_date_result: pd.DataFrame = bq.query(query, as_dataframe=True)
-        pprint(max_date_result)
         max_open_time = max(max_date_result["max_open_time"])
-        pprint(max_open_time)
 
         # now max_open_time is your new start_time
         start_time = max_open_time + interval_to_milliseconds(interval)
-        print(f"start_time={start_time}")
 
         # Get the timezone for Singapore
         sgt = pytz.timezone("Asia/Singapore")
         time_now = int(datetime.now(sgt).timestamp() * 1000)
-        print(f"time_now={time_now}")
 
         # only pull data from start_time onwards, which is the latest date in the table
         df, _ = extract.from_api(
-            symbol="BTCUSDT",
+            symbol=symbol,
             start_time=start_time,
             end_time=time_now,
-            interval="1m",
-            limit=1000,
-            base_url="https://api.binance.com",
-            endpoint="/api/v3/klines",
+            interval=interval,
+            limit=limit,
+            base_url=base_url,
+            endpoint=endpoint,
         )
 
         df = load.update_metadata(df, metadata)
@@ -183,13 +183,30 @@ def upload_latest_data(
             df,
             gcs=gcs,
             dataset=dataset,
-            table_name=table_name,
+            table_name=raw_table_name,
             updated_at=updated_at,
         )
         logger.info(f"File {blob.name} uploaded to {bucket_name}.")
 
         # Append the new data to the existing table
         load.to_bigquery(df, bq=bq, write_disposition="WRITE_APPEND")
+
+    transformed_df = transform.cast_columns(df)
+    blob = load.to_google_cloud_storage(
+        transformed_df,
+        gcs=gcs,
+        dataset=dataset,
+        table_name=processed_table_name,
+        updated_at=updated_at,
+    )
+    logger.info(f"File {blob.name} uploaded to {bucket_name}.")
+    schema = load.generate_bq_schema_from_pandas(transformed_df)
+    pprint(schema)
+    bq.table_name = processed_table_name
+
+    if not bq.check_if_table_exists():
+        bq.create_table(schema=schema)
+    load.to_bigquery(transformed_df, bq=bq, write_disposition="WRITE_APPEND")
 
 
 def run():
@@ -198,7 +215,6 @@ def run():
     upload_latest_data(
         symbol="BTCUSDT",  # "ETHUSDT
         start_time=start_time,
-        end_time=None,
         interval="1m",
         limit=1000,
         base_url="https://api.binance.com",
@@ -207,7 +223,8 @@ def run():
         google_application_credentials=GOOGLE_APPLICATION_CREDENTIALS,
         bucket_name=BUCKET_NAME,
         dataset="mlops_pipeline_v1_staging",
-        table_name="raw_binance_btcusdt_spot",
+        raw_table_name="raw_binance_btcusdt_spot",
+        processed_table_name="processed_binance_btcusdt_spot",
     )
 
 
