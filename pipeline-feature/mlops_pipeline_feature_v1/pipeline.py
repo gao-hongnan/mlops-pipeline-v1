@@ -1,7 +1,7 @@
 import os
 import time
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 import pandas as pd
 import pytz
@@ -17,8 +17,11 @@ from omegaconf import DictConfig
 from pydantic import BaseModel  # pylint: disable=no-name-in-module
 from rich.pretty import pprint
 
-from mlops_pipeline_feature_v1 import extract
+from mlops_pipeline_feature_v1 import extract, load, transform
 from mlops_pipeline_feature_v1.utils import interval_to_milliseconds
+
+import load, extract, transform
+from utils import interval_to_milliseconds
 
 # TODO: add logger to my common_utils
 # TODO: add transforms to elt like dbt and great expectations
@@ -68,63 +71,19 @@ def load_configs() -> DictConfig:
     return cfg
 
 
-def generate_bq_schema_from_pandas(df: pd.DataFrame) -> List[bigquery.SchemaField]:
-    """
-    Convert pandas dtypes to BigQuery dtypes.
-
-    Parameters
-    ----------
-    dtypes : pandas Series
-        The pandas dtypes to convert.
-
-    Returns
-    -------
-    List[google.cloud.bigquery.SchemaField]
-        The corresponding BigQuery dtypes.
-    """
-    dtype_mapping = {
-        "int64": bigquery.enums.SqlTypeNames.INT64,
-        "float64": bigquery.enums.SqlTypeNames.FLOAT64,
-        "object": bigquery.enums.SqlTypeNames.STRING,
-        "bool": bigquery.enums.SqlTypeNames.BOOL,
-        "datetime64[ns]": bigquery.enums.SqlTypeNames.DATETIME,
-    }
-
-    schema = []
-
-    for column, dtype in df.dtypes.items():
-        if str(dtype) not in dtype_mapping:
-            raise ValueError(f"Cannot convert {dtype} to a BigQuery data type.")
-
-        bq_dtype = dtype_mapping[str(dtype)]
-        field = bigquery.SchemaField(name=column, field_type=bq_dtype, mode="NULLABLE")
-        schema.append(field)
-
-    return schema
-
-
-class Metadata(BaseModel):
-    updated_at: datetime = datetime.now(pytz.timezone("Asia/Singapore"))
-    source: str = "binance"
-    source_type: str = "spot"
-
-
-def update_metadata(df, metadata: Metadata):
-    """Updates the DataFrame with metadata information."""
-    for key, value in metadata.dict().items():
-        df[key] = value
-    return df
-
-
 def upload_latest_data(
     symbol: str,
-    interval: str,
-    project_id: str,
-    google_application_credentials: str,
+    start_time: int,
+    end_time: Optional[int] = None,
+    interval: str = "1m",
+    limit: int = 1000,
+    base_url: str = "https://api.binance.com",
+    endpoint: str = "/api/v3/klines",
+    project_id: str = PROJECT_ID,
+    google_application_credentials: str = GOOGLE_APPLICATION_CREDENTIALS,
     bucket_name: str = None,
-    table_name: str = None,  # for example bigquery table id
     dataset: str = None,  # for example bigquery dataset
-    start_time: int = None,
+    table_name: str = None,  # for example bigquery table id
 ):
     gcs = GCS(
         project_id=project_id,
@@ -148,6 +107,9 @@ def upload_latest_data(
     # flag to check if table exists
     table_exists = bq.check_if_table_exists()
 
+    metadata = load.Metadata()
+    updated_at = metadata.updated_at
+
     # if dataset or table does not exist, create them
     if not dataset_exists or not table_exists:
         logger.warning("Dataset or table does not exist. Creating them now...")
@@ -167,23 +129,24 @@ def upload_latest_data(
             base_url="https://api.binance.com",
             endpoint="/api/v3/klines",
         )
-        metadata = Metadata()
-        df = update_metadata(df, metadata)
-        pprint(df)
 
-        updated_at = df["updated_at"].iloc[0]
-        blob = gcs.create_blob(f"{dataset}/{table_name}/{updated_at}.csv")
+        df = load.update_metadata(df, metadata)
 
-        blob.upload_from_string(df.to_csv(index=False), content_type="text/csv")
+        blob = load.to_google_cloud_storage(
+            df,
+            gcs=gcs,
+            dataset=dataset,
+            table_name=table_name,
+            updated_at=updated_at,
+        )
         logger.info(f"File {blob.name} uploaded to {bucket_name}.")
 
-        schema = generate_bq_schema_from_pandas(df)
+        schema = load.generate_bq_schema_from_pandas(df)
         pprint(schema)
 
         bq.create_dataset()
         bq.create_table(schema=schema)  # empty table with schema
-        job_config = bq.load_job_config(schema=schema, write_disposition="WRITE_APPEND")
-        bq.load_table_from_dataframe(df=df, job_config=job_config)
+        load.to_bigquery(df, bq=bq, write_disposition="WRITE_APPEND", schema=schema)
     else:
         logger.info("Dataset and table already exist. Fetching the latest date now...")
 
@@ -216,32 +179,37 @@ def upload_latest_data(
             base_url="https://api.binance.com",
             endpoint="/api/v3/klines",
         )
-        print("df.head()", df.head())
 
-        metadata = Metadata()
-        df = update_metadata(df, metadata)
-        updated_at = df["updated_at"].iloc[0]
-        blob = gcs.create_blob(f"{dataset}/{table_name}/{updated_at}.csv")
-        blob.upload_from_string(df.to_csv(index=False), content_type="text/csv")
+        df = load.update_metadata(df, metadata)
+        blob = load.to_google_cloud_storage(
+            df,
+            gcs=gcs,
+            dataset=dataset,
+            table_name=table_name,
+            updated_at=updated_at,
+        )
         logger.info(f"File {blob.name} uploaded to {bucket_name}.")
 
         # Append the new data to the existing table
-        job_config = bq.load_job_config(write_disposition="WRITE_APPEND")
-        bq.load_table_from_dataframe(df=df, job_config=job_config)
+        load.to_bigquery(df, bq=bq, write_disposition="WRITE_APPEND")
 
 
 def run():
     start_time = int(datetime(2023, 6, 1, 20, 0, 0).timestamp() * 1000)
 
     upload_latest_data(
-        "BTCUSDT",  # "ETHUSDT
-        "1m",
-        PROJECT_ID,
-        GOOGLE_APPLICATION_CREDENTIALS,
-        BUCKET_NAME,
-        dataset="mlops_pipeline_v1_staging",
-        table_name="binance_btcusdt_spot",
+        symbol="BTCUSDT",  # "ETHUSDT
         start_time=start_time,
+        end_time=None,
+        interval="1m",
+        limit=1000,
+        base_url="https://api.binance.com",
+        endpoint="/api/v3/klines",
+        project_id=PROJECT_ID,
+        google_application_credentials=GOOGLE_APPLICATION_CREDENTIALS,
+        bucket_name=BUCKET_NAME,
+        dataset="mlops_pipeline_v1_staging",
+        table_name="raw_binance_btcusdt_spot",
     )
 
 
