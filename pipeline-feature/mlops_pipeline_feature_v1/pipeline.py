@@ -10,6 +10,7 @@ import rich
 from common_utils.cloud.gcp.storage.bigquery import BigQuery
 from common_utils.cloud.gcp.storage.gcs import GCS
 from common_utils.core.logger import Logger
+from common_utils.core.common import load_env_vars, get_root_dir
 from dotenv import load_dotenv
 
 from google.cloud import bigquery
@@ -24,37 +25,32 @@ from mlops_pipeline_feature_v1.utils import interval_to_milliseconds
 # TODO: add transforms to elt like dbt and great expectations
 # TODO: add tests
 # TODO: split to multiple files
-
-# Setup logging
-logger = Logger(
-    log_file="mlops_pipeline_feature_v1.log",
-    log_dir="../outputs/mlops_pipeline_feature_v1",
-    # log_dir=None,
-).logger
+import time
 
 # Set environment variables.
-if os.getenv("ROOT_DIR") is None:
-    ROOT_DIR = str(Path.cwd().parent)
-    os.environ["ROOT_DIR"] = ROOT_DIR
-    print(f"ROOT_DIR: {ROOT_DIR}")
-else:
-    print(
-        "ROOT_DIR is already set. Likely in Docker since Environment is set in compose file."
-    )
-    ROOT_DIR = Path(os.getenv("ROOT_DIR"))
-    print(f"ROOT_DIR: {ROOT_DIR}")
 
-load_dotenv(dotenv_path=f"{ROOT_DIR}/.env")
-
+ROOT_DIR = get_root_dir(env_var="ROOT_DIR", root_dir=".")
+pprint(ROOT_DIR)
+os.environ["ROOT_DIR"] = str(ROOT_DIR)
+load_env_vars(root_dir=ROOT_DIR)
 PROJECT_ID = os.getenv("PROJECT_ID")
 GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 BUCKET_NAME = os.getenv("BUCKET_NAME")
 rich.print(PROJECT_ID, GOOGLE_APPLICATION_CREDENTIALS, BUCKET_NAME)
 
-# gcs = GCS(PROJECT_ID, GOOGLE_APPLICATION_CREDENTIALS, bucket_name=BUCKET_NAME)
-# files = gcs.list_gcs_files()
+# Setup logging
+# so if you are in docker, then ROOT_DIR = opt/airflow
+# but i overwrite to become     ROOT_DIR: ${ROOT_DIR:-/opt/airflow/dags}
+logger = Logger(
+    log_file="mlops_pipeline_feature_v1.log",
+    log_dir=f"{ROOT_DIR}/outputs/mlops_pipeline_feature_v1",
+    # log_dir=None,
+).logger
 
-# rich.print(files)
+DEBUG = False
+
+if DEBUG:
+    time.sleep(600)
 
 
 def generate_bq_schema_from_pandas(df: pd.DataFrame) -> List[bigquery.SchemaField]:
