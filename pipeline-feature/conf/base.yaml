@@ -5,11 +5,12 @@ defaults:
 
 general:
   output_dir: "../outputs/mlops_pipeline_feature_v1" # in sync with hydra output dir
-  project_id: ${env.}
-  google_application_credentials
-  bucket_name
-  table_name
-  dataset:
+  start_time: ${extract.start_time}
+  # project_id: ${env.}
+  # google_application_credentials
+  # bucket_name
+  # table_name
+  # dataset:
 
 hydra:
   run:

@@ -9,10 +9,13 @@ import hydra
 import pandas as pd
 import pytz
 import rich
+from omegaconf import OmegaConf
+
 from common_utils.cloud.gcp.storage.bigquery import BigQuery
 from common_utils.cloud.gcp.storage.gcs import GCS
 from common_utils.core.logger import Logger
 from dotenv import load_dotenv
+from hydra import compose, initialize
 
 from google.cloud import bigquery
 from omegaconf import DictConfig
@@ -29,20 +32,26 @@ from hydra.core.hydra_config import HydraConfig
 # TODO: split to multiple files
 
 # Setup logging
-logger = Logger(
-    log_file="mlops_pipeline_feature_v1.log",
-    log_dir="../outputs/mlops_pipeline_feature_v1",
-).logger
+# logger = Logger(
+#     log_file="mlops_pipeline_feature_v1.log",
+#     log_dir="../outputs/mlops_pipeline_feature_v1",
+# ).logger
 
 
-@hydra.main(config_path="../conf", config_name="base", version_base=None)
-def my_app(cfg: DictConfig) -> None:
-    output_dir = HydraConfig.get().runtime.output_dir
+def run() -> DictConfig:
+    initialize(config_path="../conf", version_base=None)
+    cfg: DictConfig = compose(
+        config_name="base",
+        overrides=["extract.start_time=1685620800000"],
+        return_hydra_config=True,
+    )
 
-    logger.info(f"Output dir: {output_dir}")
     pprint(cfg.extract)
-    pprint(cfg.general)
+    pprint(cfg.general.start_time)
+
+    # print(OmegaConf.to_yaml(cfg, resolve=True))
+    return cfg
 
 
 if __name__ == "__main__":
-    my_app()
+    run()
