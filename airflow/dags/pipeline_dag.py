@@ -57,7 +57,7 @@ def ml_pipeline():
         """
         from mlops_pipeline_feature_v1 import pipeline
 
-        cfg = pipeline.load_configs()
+        # cfg = pipeline.load_configs()
 
         pipeline.run()
         return {"feature_pipeline_run_id": "123"}

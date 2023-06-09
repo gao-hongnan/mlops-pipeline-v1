@@ -7,7 +7,7 @@ import requests
 from mlops_pipeline_feature_v1.utils import interval_to_milliseconds
 
 
-def extract_from_api(
+def from_api(
     symbol: str,
     start_time: int,
     end_time: Optional[int] = None,

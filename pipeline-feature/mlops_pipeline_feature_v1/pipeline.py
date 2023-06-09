@@ -12,11 +12,13 @@ from common_utils.core.common import get_root_dir, load_env_vars
 from common_utils.core.logger import Logger
 from google.cloud import bigquery
 from hydra import compose, initialize
-from mlops_pipeline_feature_v1.extract import extract_from_api
-from mlops_pipeline_feature_v1.utils import interval_to_milliseconds
+from pathlib import Path
 from omegaconf import DictConfig
 from pydantic import BaseModel  # pylint: disable=no-name-in-module
 from rich.pretty import pprint
+
+from mlops_pipeline_feature_v1 import extract
+from mlops_pipeline_feature_v1.utils import interval_to_milliseconds
 
 # TODO: add logger to my common_utils
 # TODO: add transforms to elt like dbt and great expectations
@@ -32,6 +34,9 @@ PROJECT_ID = os.getenv("PROJECT_ID")
 GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 BUCKET_NAME = os.getenv("BUCKET_NAME")
 rich.print(PROJECT_ID, GOOGLE_APPLICATION_CREDENTIALS, BUCKET_NAME)
+
+Path(f"{ROOT_DIR}/outputs/mlops_pipeline_feature_v1").mkdir(parents=True, exist_ok=True)
+
 
 # Setup logging
 # so if you are in docker, then ROOT_DIR = opt/airflow
@@ -153,7 +158,7 @@ def upload_latest_data(
         sgt = pytz.timezone("Asia/Singapore")
         time_now = int(datetime.now(sgt).timestamp() * 1000)
 
-        df, metadata = extract_from_api(
+        df, metadata = extract.from_api(
             symbol=symbol,
             start_time=start_time,
             end_time=time_now,
@@ -202,7 +207,7 @@ def upload_latest_data(
         print(f"time_now={time_now}")
 
         # only pull data from start_time onwards, which is the latest date in the table
-        df, metadata = extract_from_api(
+        df, metadata = extract.from_api(
             symbol="BTCUSDT",
             start_time=start_time,
             end_time=time_now,
