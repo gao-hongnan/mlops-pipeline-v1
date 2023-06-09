@@ -11,3 +11,7 @@ bash make_venv.sh venv_pipeline_feature --pyproject --dev && \
 source venv_pipeline_feature/bin/activate && \
 rm make_venv.sh
 ```
+
+```bash
+python pipeline-feature/mlops_pipeline_feature_v1/pipeline.py
+```

@@ -1,7 +1,7 @@
 import os
 import time
 from datetime import datetime
-from typing import List, Optional
+from pathlib import Path
 
 import pandas as pd
 import pytz
@@ -10,16 +10,11 @@ from common_utils.cloud.gcp.storage.bigquery import BigQuery
 from common_utils.cloud.gcp.storage.gcs import GCS
 from common_utils.core.common import get_root_dir, load_env_vars
 from common_utils.core.logger import Logger
-from google.cloud import bigquery
 from hydra import compose, initialize
-from pathlib import Path
-from omegaconf import DictConfig
-from pydantic import BaseModel  # pylint: disable=no-name-in-module
-from rich.pretty import pprint
-
 from mlops_pipeline_feature_v1 import extract, load, transform
 from mlops_pipeline_feature_v1.utils import interval_to_milliseconds
-
+from omegaconf import DictConfig
+from rich.pretty import pprint
 
 # TODO: add logger to my common_utils
 # TODO: add transforms to elt like dbt and great expectations
@@ -36,15 +31,22 @@ GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 BUCKET_NAME = os.getenv("BUCKET_NAME")
 rich.print(PROJECT_ID, GOOGLE_APPLICATION_CREDENTIALS, BUCKET_NAME)
 
-Path(f"{ROOT_DIR}/outputs/mlops_pipeline_feature_v1").mkdir(parents=True, exist_ok=True)
+OUTPUTS_DIR = f"{ROOT_DIR}/outputs/mlops_pipeline_feature_v1"
+Path(OUTPUTS_DIR).mkdir(parents=True, exist_ok=True)
 
+
+LOGS_DIR = f"{OUTPUTS_DIR}/logs"
+STORES_DIR = f"{OUTPUTS_DIR}/stores"
+
+Path(LOGS_DIR).mkdir(parents=True, exist_ok=True)
+Path(STORES_DIR).mkdir(parents=True, exist_ok=True)
 
 # Setup logging
 # so if you are in docker, then ROOT_DIR = opt/airflow
 # but i overwrite to become     ROOT_DIR: ${ROOT_DIR:-/opt/airflow/dags}
 logger = Logger(
     log_file="mlops_pipeline_feature_v1.log",
-    log_dir=f"{ROOT_DIR}/outputs/mlops_pipeline_feature_v1",
+    log_dir=f"{OUTPUTS_DIR}/logs",
     # log_dir=None,
 ).logger
 

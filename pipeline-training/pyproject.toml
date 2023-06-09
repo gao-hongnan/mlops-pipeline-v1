@@ -3,12 +3,12 @@ requires = ["setuptools>=61.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pipeline-feature"
-version = "0.0.46"
+name = "pipeline-training"
+version = "0.0.1"
 authors = [
   { name="Gao Hongnan", email="hongnangao@gmail.com" },
 ]
-description = "Feature Pipeline of MLOps Pipeline Version 1"
+description = "Training Pipeline of MLOps Pipeline Version 1"
 readme = "README.md"
 requires-python = ">=3.7"
 classifiers = [
@@ -19,6 +19,7 @@ classifiers = [
 dependencies = [
     "gaohn-common-utils",
     "hydra-core==1.3.2",
+    "scikit-learn==1.2.2",
 ]
 
 [project.optional-dependencies]
