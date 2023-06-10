@@ -23,7 +23,15 @@ from dotenv import load_dotenv
 # TODO: split to multiple files
 # Set environment variables.
 
-DOCKER = True
+import os
+
+
+def is_docker():
+    path = "/.dockerenv"
+    return os.path.exists(path)
+
+
+DOCKER = is_docker()
 
 ROOT_DIR = get_root_dir(env_var="ROOT_DIR", root_dir=".")
 pprint(ROOT_DIR)
@@ -31,6 +39,7 @@ os.environ["ROOT_DIR"] = str(ROOT_DIR)
 if DOCKER:
     # Load environment variables from .env file
     load_dotenv("/gaohn/.env.docker")
+    OUTPUTS_DIR = "/outputs/mlops_pipeline_feature_v1"
 else:
     load_env_vars(root_dir=ROOT_DIR)
 
@@ -40,6 +49,7 @@ BUCKET_NAME = os.getenv("BUCKET_NAME")
 rich.print(PROJECT_ID, GOOGLE_APPLICATION_CREDENTIALS, BUCKET_NAME)
 
 OUTPUTS_DIR = f"{ROOT_DIR}/outputs/mlops_pipeline_feature_v1"
+
 Path(OUTPUTS_DIR).mkdir(parents=True, exist_ok=True)
 
 
@@ -217,6 +227,8 @@ def pipeline(
     if not bq.check_if_table_exists():
         bq.create_table(schema=schema)
     load.to_bigquery(transformed_df, bq=bq, write_disposition="WRITE_APPEND")
+
+    return {}
 
 
 def run():

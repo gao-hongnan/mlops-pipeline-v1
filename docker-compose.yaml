@@ -1,13 +1,23 @@
-version: '3'
+version: '3.8'
+x-logging:
+  &default-logging
+  options:
+    max-size: "100m"
+    max-file: "5"
+  driver: json-file
 services:
   pipeline-feature:
     build:
       context: ./pipeline-feature
       dockerfile: Dockerfile
+    logging: *default-logging
+    restart: unless-stopped
     env_file:
-      - ./.env.docker # assuming the .env file is at the root of your project
+      - .env.docker # assuming the .env file is at the root of your project
     volumes:
-      - ./pipeline-feature:/gaohn/pipeline-feature
-      - ./config:/etc/cron.d
-      - .env.docker:/gaohn/.env.docker
+      - ./.env.docker:/gaohn/.env.docker # mount the .env.docker file at the root of your project into the /gaohn directory in the container
+      - data:${DOCKER_OUTPUTS_CONTAINER}
     command: [ "sh", "-c", "cron && tail -f /var/log/cron.log" ]
+volumes:
+  data:
+    name: ${DOCKER_OUTPUTS_HOST}

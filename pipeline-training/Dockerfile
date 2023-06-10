@@ -3,8 +3,8 @@ ARG PYTHON_VERSION=3.9
 # Base image
 FROM python:${PYTHON_VERSION}-slim-buster as builder
 
-# Set work directory to /gaohn/pipeline-feature
-WORKDIR /gaohn/pipeline-feature
+# Set work directory to /gaohn/pipeline-training
+WORKDIR /gaohn/pipeline-training
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -19,7 +19,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Copy only requirements, to cache them in docker layer
 ARG REQUIREMENTS=requirements.txt
 ARG REQUIREMENTS_DEV=requirements_dev.txt
-ARG PACKAGE=pipeline-feature
+ARG PACKAGE=pipeline-training
 COPY ./${REQUIREMENTS} .
 COPY ./${REQUIREMENTS_DEV} .
 RUN python3 -m pip install --upgrade pip && \
@@ -36,16 +36,16 @@ RUN apt-get update && apt-get install -y cron
 
 # Copy from builder image
 COPY --from=builder /opt/venv /opt/venv
-COPY --from=builder /gaohn/pipeline-feature /gaohn/pipeline-feature
+COPY --from=builder /gaohn/pipeline-training /gaohn/pipeline-training
 
 # Set work dir again to the pipeline-feature subdirectory
-WORKDIR /gaohn/pipeline-feature
+WORKDIR /gaohn/pipeline-training
 
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy the rest of the application
 COPY ./conf conf
-COPY ./mlops_pipeline_feature_v1 mlops_pipeline_feature_v1
+COPY ./mlops_pipeline_training_v1 mlops_pipeline_training_v1
 COPY ./gcp-storage-service-account.json /gaohn/gcp-storage-service-account.json
 
 # Copy the cronjob file

@@ -1,5 +1,13 @@
 # MLOps Pipeline v1
 
+```bash
+~/mlops-pipeline-v1/pipeline-feature $ curl -s -o make_venv.sh \
+  https://raw.githubusercontent.com/gao-hongnan/common-utils/main/scripts/devops/make_venv.sh && \
+bash make_venv.sh venv_pipeline --pyproject --dev && \
+source venv_pipeline/bin/activate && \
+rm make_venv.sh
+```
+
 ## Problem Statement
 
 Dummy prediction: use some features to predict `num_of_trades`.
@@ -7,8 +15,16 @@ Dummy prediction: use some features to predict `num_of_trades`.
 ## Docker
 
 ```bash
-docker compose down && \
-docker compose --env-file .env up --build -d
+docker compose --env-file .env.docker down && \
+docker compose --env-file .env.docker up --build -d
+```
+
+```bash
+docker exec -it mlops-pipeline-v1-pipeline-feature-1 /bin/bash
+```
+
+```bash
+cat /var/log/cron.log
 ```
 
 ## SSH
