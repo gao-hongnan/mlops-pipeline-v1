@@ -1,0 +1,2 @@
+*/1 * * * * /opt/venv/bin/python3 /gaohn/orchestrator/dag.py >> /var/log/cron.log 2>&1
+

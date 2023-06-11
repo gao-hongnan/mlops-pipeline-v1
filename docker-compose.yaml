@@ -6,9 +6,9 @@ x-logging:
     max-file: "5"
   driver: json-file
 services:
-  pipeline-feature:
+  orchestrator:
     build:
-      context: ./pipeline-feature
+      context: ./orchestrator
       dockerfile: Dockerfile
     logging: *default-logging
     restart: unless-stopped

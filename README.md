@@ -16,11 +16,12 @@ Dummy prediction: use some features to predict `num_of_trades`.
 
 ```bash
 docker compose --env-file .env.docker down && \
+# docker rmi $(docker images -q) && \
 docker compose --env-file .env.docker up --build -d
 ```
 
 ```bash
-docker exec -it mlops-pipeline-v1-pipeline-feature-1 /bin/bash
+docker exec -it mlops-pipeline-v1 /bin/bash
 ```
 
 ```bash

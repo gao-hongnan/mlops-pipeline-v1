@@ -8,7 +8,7 @@ import pytz
 import rich
 from common_utils.cloud.gcp.storage.bigquery import BigQuery
 from common_utils.cloud.gcp.storage.gcs import GCS
-from common_utils.core.common import get_root_dir, load_env_vars
+from common_utils.core.common import get_root_dir, load_env_vars, generate_uuid
 from common_utils.core.logger import Logger
 from hydra import compose, initialize
 from mlops_pipeline_feature_v1 import extract, load, transform
@@ -31,6 +31,8 @@ def is_docker():
     return os.path.exists(path)
 
 
+RUN_ID = generate_uuid()
+
 DOCKER = is_docker()
 
 ROOT_DIR = get_root_dir(env_var="ROOT_DIR", root_dir=".")
@@ -39,32 +41,35 @@ os.environ["ROOT_DIR"] = str(ROOT_DIR)
 if DOCKER:
     # Load environment variables from .env file
     load_dotenv("/gaohn/.env.docker")
-    OUTPUTS_DIR = "/outputs/mlops_pipeline_feature_v1"
+    OUTPUTS_DIR = f"/outputs/{RUN_ID}"
 else:
     load_env_vars(root_dir=ROOT_DIR)
+    OUTPUTS_DIR = f"{ROOT_DIR}/outputs/{RUN_ID}"
 
 PROJECT_ID = os.getenv("PROJECT_ID")
 GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 BUCKET_NAME = os.getenv("BUCKET_NAME")
 rich.print(PROJECT_ID, GOOGLE_APPLICATION_CREDENTIALS, BUCKET_NAME)
 
-OUTPUTS_DIR = f"{ROOT_DIR}/outputs/mlops_pipeline_feature_v1"
 
 Path(OUTPUTS_DIR).mkdir(parents=True, exist_ok=True)
 
+# FIXME: consider using a common file to init all these dirs
 
 LOGS_DIR = f"{OUTPUTS_DIR}/logs"
 STORES_DIR = f"{OUTPUTS_DIR}/stores"
+ARTIFACTS_DIR = f"{STORES_DIR}/artifacts"
 
 Path(LOGS_DIR).mkdir(parents=True, exist_ok=True)
 Path(STORES_DIR).mkdir(parents=True, exist_ok=True)
+Path(ARTIFACTS_DIR).mkdir(parents=True, exist_ok=True)
 
 # Setup logging
 # so if you are in docker, then ROOT_DIR = opt/airflow
 # but i overwrite to become     ROOT_DIR: ${ROOT_DIR:-/opt/airflow/dags}
 logger = Logger(
     log_file="mlops_pipeline_feature_v1.log",
-    log_dir=f"{OUTPUTS_DIR}/logs",
+    log_dir=LOGS_DIR,
     # log_dir=None,
 ).logger
 
@@ -228,14 +233,14 @@ def pipeline(
         bq.create_table(schema=schema)
     load.to_bigquery(transformed_df, bq=bq, write_disposition="WRITE_APPEND")
 
-    return {}
+    return {"run_id": RUN_ID, "status": "success"}
 
 
 def run():
     # eg: int(datetime(2023, 6, 1, 8, 0, 0).timestamp() * 1000)
     start_time = int(datetime(2023, 6, 1, 20, 0, 0).timestamp() * 1000)
 
-    pipeline(
+    metadata = pipeline(
         symbol="BTCUSDT",  # "ETHUSDT
         start_time=start_time,
         interval="1m",
@@ -249,6 +254,7 @@ def run():
         raw_table_name="raw_binance_btcusdt_spot",
         processed_table_name="processed_binance_btcusdt_spot",
     )
+    return metadata
 
 
 if __name__ == "__main__":

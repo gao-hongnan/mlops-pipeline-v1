@@ -22,6 +22,7 @@ class Pipeline:
     def __init__(self):
         self.graph = nx.DiGraph()
         self.tasks = {}
+        self.task_data = {}
 
     def task(self):
         def decorator(f):
@@ -39,8 +40,15 @@ class Pipeline:
         with ThreadPoolExecutor(max_workers=3) as executor:
             for task_name in nx.topological_sort(self.graph):
                 task_func = self.tasks[task_name]
-                future = executor.submit(task_func)
-                future.result()
+                if task_name in self.task_data:
+                    args = self.task_data[task_name]
+                else:
+                    args = ()
+                future = executor.submit(task_func, *args)
+                result = future.result()
+                for successor in self.graph.successors(task_name):
+                    self.task_data[successor] = (result,)
+            return self.task_data
 
     def visualize(self):
         pos = nx.spring_layout(self.graph)
@@ -66,16 +74,19 @@ def feature_pipeline():
     from mlops_pipeline_feature_v1 import pipeline
 
     print("Running feature pipeline")
-    pipeline.run()
+    metadata = pipeline.run()
+    return metadata
 
 
 @pipeline.task()
-def training_pipeline():
+def training_pipeline(metadata):
     print("Running training pipeline")
+    print(metadata)
+    return metadata
 
 
 @pipeline.task()
-def prediction_pipeline():
+def prediction_pipeline(metadata):
     print("Running prediction pipeline")
 
 
