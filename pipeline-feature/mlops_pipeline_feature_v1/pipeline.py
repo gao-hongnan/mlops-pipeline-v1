@@ -6,7 +6,7 @@ from pathlib import Path
 import pandas as pd
 import pytz
 import rich
-from common_utils.cloud.gcp.storage.bigquery import BigQuery
+from common_utils.cloud.gcp.database.bigquery import BigQuery
 from common_utils.cloud.gcp.storage.gcs import GCS
 from common_utils.core.common import get_root_dir, load_env_vars, generate_uuid
 from common_utils.core.logger import Logger

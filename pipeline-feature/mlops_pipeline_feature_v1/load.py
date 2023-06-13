@@ -6,7 +6,7 @@ from typing import List, Optional
 
 import pandas as pd
 import pytz
-from common_utils.cloud.gcp.storage.bigquery import BigQuery
+from common_utils.cloud.gcp.database.bigquery import BigQuery
 from common_utils.cloud.gcp.storage.gcs import GCS
 from google.cloud import bigquery, storage
 from pydantic import BaseModel  # pylint: disable=no-name-in-module
