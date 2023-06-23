@@ -1,12 +1,25 @@
 # MLOps Pipeline v1
 
+
+> Have major problems setting default google ssh keys, so create your own and
+> link to gcp vm.
+
 ```bash
-~/mlops-pipeline-v1/pipeline-feature $ curl -s -o make_venv.sh \
-  https://raw.githubusercontent.com/gao-hongnan/common-utils/main/scripts/devops/make_venv.sh && \
-bash make_venv.sh venv_pipeline --pyproject --dev && \
-source venv_pipeline/bin/activate && \
-rm make_venv.sh
-```
+# Define the paths and secret names
+ENV_FILE_PATH=".env"
+GOOGLE_APPLICATION_CREDENTIALS_JSON="GOOGLE_APPLICATION_CREDENTIALS_JSON"
+GOOGLE_COMPUTE_ENGINE_SSH_KEY_PATH="~/.ssh/google_compute_engine"
+GOOGLE_COMPUTE_ENGINE_SSH_KEY_VALUE="GCP_SSH_PRIVATE_KEY"
+
+# Load the environment variables from the .env file
+export $(grep -v '^#' $ENV_FILE_PATH | xargs)
+
+# Use jq to format the JSON file pointed to by the environment variable, and pipe this into gh secret set
+jq -c . "${GOOGLE_APPLICATION_CREDENTIALS}" | gh secret set $GOOGLE_APPLICATION_CREDENTIALS_JSON -b-
+
+# Read the file content and pipe it into gh secret set
+cat $GOOGLE_COMPUTE_ENGINE_SSH_KEY_PATH | gh secret set $GOOGLE_COMPUTE_ENGINE_SSH_KEY_VALUE -b-
+````
 
 ## Problem Statement
 
@@ -79,54 +92,6 @@ key to github secrets.
 cat ~/.ssh/<SSH-FILE-NAME> | gh secret set <SSH-FILE-NAME> -b-
 ```
 
-## Set GitHub Secrets and Vars
-
-> Have major problems setting default google ssh keys, so create your own and
-> link to gcp vm.
-
-```bash
-# Define the paths and secret names
-ENV_FILE_PATH=".env"
-GOOGLE_APPLICATION_CREDENTIALS_JSON="GOOGLE_APPLICATION_CREDENTIALS_JSON"
-GOOGLE_COMPUTE_ENGINE_SSH_KEY_PATH="~/.ssh/google_compute_engine"
-GOOGLE_COMPUTE_ENGINE_SSH_KEY_VALUE="GCP_SSH_PRIVATE_KEY"
-
-# Load the environment variables from the .env file
-export $(grep -v '^#' $ENV_FILE_PATH | xargs)
-
-# Use jq to format the JSON file pointed to by the environment variable, and pipe this into gh secret set
-jq -c . "${GOOGLE_APPLICATION_CREDENTIALS}" | gh secret set $GOOGLE_APPLICATION_CREDENTIALS_JSON -b-
-
-# Read the file content and pipe it into gh secret set
-cat $GOOGLE_COMPUTE_ENGINE_SSH_KEY_PATH | gh secret set $GOOGLE_COMPUTE_ENGINE_SSH_KEY_VALUE -b-
-```
-
-Set the default environment variables
-
-```bash
-gh variable set -f .env.default
-```
-
-## DataOPs
-
--   Extract data from source
--   Load to staging GCS
-    -   The format is `dataset/table_name/created_at=YYYY-MM-DD:HH:MM:SS:MS` so
-        that we can always find out which csv corresponds to which date in
-        bigquery.
--   Load to staging BigQuery
-    -   Write and Append mode! Incremental refresh
-    -   Added metadata such as `created_at` and `updated_at`
-    -   Bigquery has not so good primary key, ensure no duplicate in transforms
-        step.
-    -   Add column coin type symbol in transform
-    -   TODO: use pydantic schema for data validation and creation.
--   Transform data
--   Load to production GCS
--   Load to production BigQuery
--   Query data from production BigQuery
-    -   This is the data that will be used for training and inference
-    -   Need to dvc here if possible
 
 ## DevOps (Continuous Integration (CI) Workflow in Machine Learning)
 
