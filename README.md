@@ -25,28 +25,4 @@ cat $GOOGLE_COMPUTE_ENGINE_SSH_KEY_PATH | gh secret set $GOOGLE_COMPUTE_ENGINE_S
 
 Dummy prediction: use some features to predict `num_of_trades`.
 
-## Docker
-
-```bash
-docker compose --env-file .env.docker down && \
-# docker rmi $(docker images -q) && \
-docker compose --env-file .env.docker up --build -d
-```
-
-```bash
-docker exec -it mlops-pipeline-v1 /bin/bash
-```
-
-```bash
-cat /var/log/cron.log
-```
-
-## DevOps (Continuous Integration (CI) Workflow in Machine Learning)
-
-Find time to implement CI pipeline for this project. Reference
-`pre-merge-checks`.
-
-In a typical Machine Learning (ML) CI workflow, several stages are included.
-
-
 
